@@ -501,17 +501,18 @@ export const LOG_ACTIVITIES = [
 // Kalender: oppgavetyper og beskrivelser
 // ────────────────────────────────────────────────
 
-// Tekster som er observasjoner, ikke gjøremål
-const INFO_KEYWORDS = [
-  'blomstring','blomstrer','blomster','løv','farging','nyper','frøhoder',
-  'vekst starter','hvit masseblomstring','kraftig','enkelt','duftende',
-  'første skudd','første blader','første vekst','første grønne',
-  'lang sesong','naturaliserer','setter frukt',
+// Alt som starter med et handlingsverb er en oppgave. Alt annet er info.
+const TASK_VERB_PREFIXES = [
+  'beskjær','gjødsle','klipp','høst','plant','så ','vann','tynn',
+  'fjern','bind','fest','nett over','del','bring','ta inn','ta opp',
+  'dekk','rydd','samle','kontroller','sjekk','bryt','la ','hypp',
+  'klyp','legg','avslutt','tørk','frys','kok','sett ut','sett opp',
+  'sett ','støtt','unngå','herd','grav','flytt','slug','kok',
 ]
 
 export function isInfoTask(task) {
   const t = task.toLowerCase()
-  return INFO_KEYWORDS.some(kw => t.includes(kw))
+  return !TASK_VERB_PREFIXES.some(prefix => t.startsWith(prefix))
 }
 
 // Rike beskrivelser per oppgavetype (prefiks-match)
