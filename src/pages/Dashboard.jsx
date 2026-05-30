@@ -158,22 +158,22 @@ export default function Dashboard() {
 
   // ── Save garden ──
   async function finishSetup() {
-    const payload = {
-      name: 'Hagen min',
-      city, direction,
-      width_m: width, height_m: depth,
-      shapes,
-      updated_at: new Date().toISOString()
-    }
+    const payload = { name: 'Hagen min', city, direction, width_m: width, height_m: depth }
     let g
     if (garden) {
       const { data } = await supabase.from('gardens').update(payload).eq('id', garden.id).select().single()
       g = data
     } else {
-      const { data } = await supabase.from('gardens').insert({ ...payload, user_id: user.id }).select().single()
+      const { data, error } = await supabase.from('gardens').insert({ ...payload, user_id: user.id }).select().single()
+      if (error) { alert('Feil ved lagring av hage: ' + error.message); return }
       g = data
     }
+    // Prøv å lagre shapes separat (kolonnen kan mangle i eldre databaser)
+    if (g && shapes.length > 0) {
+      await supabase.from('gardens').update({ shapes }).eq('id', g.id)
+    }
     setGarden(g)
+    setShapes(shapes)
     setView('app')
   }
 
