@@ -29,7 +29,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [view, setView] = useState('app') // app | setup
   const [setupStep, setSetupStep] = useState(1)
-  const [addMode, setAddMode] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [pendingPos, setPendingPos] = useState(null)
   const [plantSearch, setPlantSearch] = useState('')
@@ -107,7 +106,6 @@ export default function Dashboard() {
 
   // ── Map click ──
   function handleMapClick(e) {
-    if (!addMode) return
     const svg = mapSvgRef.current
     if (!svg) return
     const pt = svgPoint(svg, e.clientX, e.clientY)
@@ -115,7 +113,6 @@ export default function Dashboard() {
     pendingPosRef.current = pos
     setPendingPos(pos)
     setShowModal(true)
-    setAddMode(false)
   }
 
   // ── Add plant ──
@@ -391,28 +388,20 @@ export default function Dashboard() {
         </div>
         <div style={{display:'flex',gap:8}}>
           <button onClick={()=>{setView('setup');setSetupStep(1)}} style={{padding:'8px 14px',borderRadius:10,fontSize:12,fontWeight:500,border:'1px solid #e7e5e4',background:'white',cursor:'pointer',fontFamily:'inherit'}}>✏️ Tegn på nytt</button>
-          <button onClick={()=>setAddMode(!addMode)} style={{padding:'8px 14px',borderRadius:10,fontSize:12,fontWeight:500,border:'none',background:addMode?'#6b3030':'#375037',color:'white',cursor:'pointer',fontFamily:'inherit'}}>
-            {addMode ? '✕ Avbryt' : '+ Legg til plante'}
-          </button>
         </div>
       </div>
 
       {/* Map card */}
-      {addMode && (
-        <div style={{background:'#375037',color:'white',borderRadius:12,padding:'12px 16px',marginBottom:12,fontSize:13,fontWeight:500,textAlign:'center'}}>
-          👆 Trykk på et sted i hagekartet under for å plassere planten
-        </div>
-      )}
-      <div style={{background:'white',borderRadius:16,border:`2px solid ${addMode ? '#375037' : '#f5f5f4'}`,boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22,transition:'border-color .15s'}}>
+      <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
         <div style={{display:'flex',alignItems:'center',padding:'12px 16px',borderBottom:'1px solid #f5f5f4',background:'white',gap:8}}>
-          <span style={{fontSize:12,color: addMode ? '#375037' : '#78716c',fontWeight: addMode ? 600 : 400}}>
-            {addMode ? '📍 Trykk i kartet for å velge plassering' : 'Klikk i hagen for å legge til plante'}
+          <span style={{fontSize:12,color:'#78716c'}}>
+            🌱 Klikk i hagen for å legge til plante
           </span>
           <div style={{marginLeft:'auto',background:'#f5f5f4',borderRadius:8,padding:'5px 10px',fontSize:12,fontWeight:500,color:'#57534e'}}>🧭 {garden?.direction || 'S'}</div>
         </div>
         <div style={{position:'relative',width:'100%',background:'#f6faf5'}}>
           <svg ref={mapSvgRef} viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg"
-               style={{width:'100%',display:'block',cursor: addMode ? 'crosshair' : 'default'}}
+               style={{width:'100%',display:'block',cursor:'crosshair'}}
                onClick={handleMapClick}>
             {shapes.map((sh, si) => {
               const style = C[sh.type] || C.garden
