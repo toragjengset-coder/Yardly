@@ -497,6 +497,96 @@ export const LOG_ACTIVITIES = [
   { type:'stell',        label:'Generelt stell', emoji:'🌿' },
 ]
 
+// ────────────────────────────────────────────────
+// Kalender: oppgavetyper og beskrivelser
+// ────────────────────────────────────────────────
+
+// Tekster som er observasjoner, ikke gjøremål
+const INFO_KEYWORDS = [
+  'blomstring','blomstrer','blomster','løv','farging','nyper','frøhoder',
+  'vekst starter','hvit masseblomstring','kraftig','enkelt','duftende',
+  'første skudd','første blader','første vekst','første grønne',
+  'lang sesong','naturaliserer','setter frukt',
+]
+
+export function isInfoTask(task) {
+  const t = task.toLowerCase()
+  return INFO_KEYWORDS.some(kw => t.includes(kw))
+}
+
+// Rike beskrivelser per oppgavetype (prefiks-match)
+export const TASK_TIPS = {
+  'Beskjær til 30':      'Beskjær ned til 30-40 cm med 3-5 sunne knopper igjen — gir kraftig ny vekst.',
+  'Beskjær ned til':     'Klipp ned til angitt høyde for å stimulere ny frisk vekst fra basen.',
+  'Beskjær':             'Fjern døde, sykelige og innovervendte greiner. Behold et åpent, luftig sentrum.',
+  'Støtt opp':           'Sett støttepinne FØR blomstringen begynner — stengelen knekker lett under vekten av blomstene.',
+  'Tynn ut frukter':     'La én frukt per klase stå og fjern resten — de gjenværende vokser seg store og søte.',
+  'Tynn ut til':         'Tynn ut til angitt avstand mellom planter for bedre luft og større avling.',
+  'Tynn ut':             'Fjern overskudd av planter eller frukter for å konsentrere næring.',
+  'Legg ut jordbærhalm': 'Halm under bærene holder dem rene fra jord og beskytter mot jordbærråte.',
+  'Hypp opp jord':       'Trekk jord opp rundt stengelen — gir løsere jord, beskytter røtter og bleker stilken.',
+  'Fjern sideskudd':     'Knekk sideskuddene av med tommelen og pekefingeren før de blir for store.',
+  'Fjern utløpere':      'Utløpere stjeler næring fra morplanten. Klipp dem av med saks helt ned til jorda.',
+  'Fjern vinterbeskyttelse': 'Gjør det gradvis over noen dager — plutselig temperaturskifte kan sette planten i sjokk.',
+  'Klipp ned til':       'Klipp ned til angitt høyde for å stimulere ny frisk vekst.',
+  'Klipp ned':           'Klipp ned til bakkenivå. Stimulerer ny vekst — planten bruker energi på røtter og knopper.',
+  'Klipp tilbake':       'Klipp tilbake med ca. 1/3. Aldri ned i gammelt trevirke på lavendel og timian.',
+  'Klipp av visne':      'Fjern visne blomster (deadheading) for å stimulere mer blomstring fremover.',
+  'Klyp av topp':        'Klipping av toppskuddet gir busketere vekst og mer blomsting fra sideskuddene.',
+  'Gjødsle med rosegjødsel': 'Gi rosegjødsel ved roten, ikke over bladene. Vann godt etter gjødsling.',
+  'Gjødsle med sur':     'Bruk sur gjødsel (rhododendron/blåbærgjødsel) — disse plantene trenger pH 4-5.',
+  'Gjødsle med bærgjødsel': 'Gjødsling om våren gir energi til blomstring og fruktsetting.',
+  'Gjødsle med frukttregjødsel': 'Gjødsel om våren gir energi til blomstring og god fruktsetting.',
+  'Gjødsle med nitrogen': 'Nitrogenrik gjødsel gir kraftige blader og godt hode — viktig for kål-vekster.',
+  'Gjødsle ukentlig':    'Ukentlig gjødsling er viktig for planter i potter — jorda blir raskt næringsfattig.',
+  'Gjødsle sparsomt':    'For mye gjødsel gir mye blad og lite blomstring — gjødsle moderat.',
+  'Gjødsle':             'Gjødsling gir planten næring for sesongveksten. Vann godt etter gjødsling.',
+  'Nett over':           'Fugler kan tømme en bærbusk på én dag — nett er det eneste som virker sikkert.',
+  'Del klumper':         'Grav opp klumpen, del med spade. Behold ytterdelene og kast midten som er eldst.',
+  'Del og replant':      'Grav opp, del i 3-4 deler og replant med god avstand for luft.',
+  'Fest skudd':          'Bind skudd horisontalt mot gitter — gir mer blomstring per skudd enn loddrett vekst.',
+  'Bryt av visne':       'Bryt av blomsterstandene rett etter blomstring for å hindre frøsetting og gi ny vekst.',
+  'Samle frø':           'La noen blomster stå og tørke. Saml frø i papirpose og oppbevar tørt og kjølig.',
+  'Kontroller for':      'Sjekk undersiden av bladene og nye skudd. Ta tak tidlig — venter du sprer det seg.',
+  'Sjekk for':           'Regelmessig kontroll gjør det mulig å stoppe sykdom før den sprer seg.',
+  'Bring inn':           'Ta inn FØR første frost. Hold i lyst rom, 10-15°C. Vann sparsomt over vinteren.',
+  'Ta inn':              'Ta inn FØR første frost. Hold i lyst rom, 10-15°C. Vann sparsomt over vinteren.',
+  'Dekk med granbar':    'Granbar isolerer og beskytter røttene mot frost — legg et lag på 10-15 cm.',
+  'Dekk foten':          'Dekk foten med bark, granbar eller kompost. Beskytter røttene mot tele.',
+  'Dekk godt':           'Godt vinterdekke er særlig viktig det første året planten skal overvintre.',
+  'Dekk':                'Dekk med granbar, løv eller halm — unngå plastfolie som gir råte under.',
+  'Plant ut etter 20':   'Vent til etter 20. mai — da er natterøstrisikoen over de fleste steder i Norge.',
+  'Plant ut etter 15':   'Vent til etter 15. mai i Oslo-regionen, noe senere i kaldere strøk.',
+  'Plant ut':            'Herd av i 7 dager: la planten stå ute i skygge noen timer om dagen før utplanting.',
+  'Plant løk':           'Plasser løkene med spissen opp. Plantedybde: ca. 3 ganger løkdiameteren.',
+  'Plant fedd':          'Skill av fedd og plant med spissen opp, 5-6 cm dypt. Planter om høsten gir avling neste sommer.',
+  'Så innendørs':        'Bruk såjord, hold lett fuktig og gi lys. De fleste frø spirer best ved 18-22°C.',
+  'Så direkte':          'Rake løst i jorda, så tynt, dekk med et tynt lag jord og trykk lett til.',
+  'Så':                  'Hold jordfuktigheten jevn de første 1-2 ukene til spiringen er i gang.',
+  'Vann godt i tørke':   'Rotflekk-rotsystemet tørker ut fort i varme — vann ved roten, ikke over bladene.',
+  'Vann jevnt':          'Ujevn vanning gir sprekker i tomater og blomsterskader. Hold jevn jordfuktighet.',
+  'Slutt å gjødsle':     'Gjødsling etter august gir bløt, frostsårbar vekst — la planten forberede seg på vinter.',
+  'La vokse':            'La planten vokse fritt uten beskjæring denne perioden — det bygger styrke til neste sesong.',
+  'La bladene gule':     'Bladene sender næring tilbake til løken. Klipp dem ikke av — vent til de er helt gule.',
+  'Rydde opp':           'Fjern planterester som kan overvintre sykdom og skadedyr til neste sesong.',
+  'Høst daglig':         'Plukk jevnlig — planter som ikke høstes slutter å produsere nye frukter.',
+  'Høst hyppig':         'Hyppig høsting stimulerer ny fruktsetting. La ingen frukter bli overmodne.',
+  'Høst etter frost':    'Frost forbedrer smaken — stivelse omdannes til sukker. La planten stå litt ut på høsten.',
+  'Høst alle':           'Ta alt resterende inn nå. Umodne frukter modner innendørs i romtemperatur.',
+  'Høst':                'Plukk regelmessig for å stimulere ny produksjon. Jo mer du høster, jo mer gir planten.',
+  'Avslutt sesongen':    'Fjern plantene og kompostér plantemateriale uten synlig sykdom.',
+  'Tørk og lagre':       'Tørk på varmt, luftig sted i 2-3 uker. Lagre tørt og kjølig med god luftsirkulasjon.',
+  'Frys ned':            'Fryser du urter rå beholder de mer aroma enn tørking. Frys i isbiter med vann.',
+  'Kok saft':            'Bær til saft koker du med litt vann til de er myke, siler og tilsetter sukker.',
+}
+
+export function getTaskTip(task) {
+  for (const [prefix, tip] of Object.entries(TASK_TIPS)) {
+    if (task.startsWith(prefix)) return tip
+  }
+  return null
+}
+
 // Bakoverkompatibilitet
 export const PLANTS = PLANT_MAP
 export const CATEGORIES = {
