@@ -42,6 +42,10 @@ export default function Dashboard() {
   const [width, setWidth] = useState(10)
   const [depth, setDepth] = useState(8)
   const [citySearch, setCitySearch] = useState('')
+  const [mousePos, setMousePos] = useState(null)
+  const [addError, setAddError] = useState('')
+  const [adding, setAdding] = useState(false)
+  const pendingPosRef = useRef(null)
   const drawSvgRef = useRef(null)
   const mapSvgRef = useRef(null)
 
@@ -67,25 +71,32 @@ export default function Dashboard() {
   }
 
   // ── SVG Drawing ──
-  function svgPoint(svg, e) {
-    const rect = svg.getBoundingClientRect()
-    const vb = svg.viewBox.baseVal
+  function svgPoint(svgEl, clientX, clientY) {
+    const rect = svgEl.getBoundingClientRect()
+    const vb = svgEl.viewBox.baseVal
     return {
-      x: ((e.clientX - rect.left) / rect.width) * vb.width,
-      y: ((e.clientY - rect.top) / rect.height) * vb.height,
+      x: ((clientX - rect.left) / rect.width) * vb.width,
+      y: ((clientY - rect.top) / rect.height) * vb.height,
     }
+  }
+
+  function handleDrawMouseMove(e) {
+    const svg = drawSvgRef.current
+    if (!svg || currentShape.length === 0) { setMousePos(null); return }
+    setMousePos(svgPoint(svg, e.clientX, e.clientY))
   }
 
   function handleDrawClick(e) {
     const svg = drawSvgRef.current
     if (!svg) return
-    const pt = svgPoint(svg, e)
+    const pt = svgPoint(svg, e.clientX, e.clientY)
     if (currentShape.length > 2) {
       const first = currentShape[0]
       const dx = pt.x - first.x, dy = pt.y - first.y
-      if (Math.sqrt(dx*dx + dy*dy) < 12) {
+      if (Math.sqrt(dx*dx + dy*dy) < 14) {
         setShapes(prev => [...prev, { type: drawTool, points: currentShape, closed: true }])
         setCurrentShape([])
+        setMousePos(null)
         return
       }
     }
@@ -99,28 +110,42 @@ export default function Dashboard() {
     if (!addMode) return
     const svg = mapSvgRef.current
     if (!svg) return
-    const pt = svgPoint(svg, e)
-    setPendingPos({ x: pt.x / 500 * 100, y: pt.y / 320 * 100 })
+    const pt = svgPoint(svg, e.clientX, e.clientY)
+    const pos = { x: pt.x / 500 * 100, y: pt.y / 320 * 100 }
+    pendingPosRef.current = pos
+    setPendingPos(pos)
     setShowModal(true)
     setAddMode(false)
   }
 
   // ── Add plant ──
   async function addPlant(plantKey) {
-    if (!garden || !pendingPos) return
-    const info = PLANT_MAP[plantKey]
-    const { data } = await supabase.from('garden_plants').insert({
+    const pos = pendingPosRef.current
+    if (!garden || !pos) {
+      setAddError('Ingen posisjon valgt — klikk i hagen først.')
+      return
+    }
+    setAdding(true)
+    setAddError('')
+    const { data, error } = await supabase.from('garden_plants').insert({
       garden_id: garden.id,
       user_id: user.id,
       plant_key: plantKey,
-      position_x: pendingPos.x,
-      position_y: pendingPos.y,
+      position_x: pos.x,
+      position_y: pos.y,
       planted_date: new Date().toISOString().split('T')[0],
     }).select().single()
+    setAdding(false)
+    if (error) {
+      setAddError('Kunne ikke legge til plante: ' + error.message)
+      return
+    }
     if (data) setPlants(prev => [...prev, data])
     setShowModal(false)
     setPendingPos(null)
+    pendingPosRef.current = null
     setPlantSearch('')
+    setAddError('')
   }
 
   async function deletePlant(id) {
@@ -203,6 +228,8 @@ export default function Dashboard() {
 
               <svg ref={drawSvgRef} viewBox="0 0 500 340" xmlns="http://www.w3.org/2000/svg"
                    onClick={handleDrawClick}
+                   onMouseMove={handleDrawMouseMove}
+                   onMouseLeave={() => setMousePos(null)}
                    style={{width:'100%',borderRadius:12,border:'1px solid #e7e5e4',background:'#f6faf5',display:'block',cursor:'crosshair',touchAction:'none'}}>
                 {/* Grid */}
                 <defs>
@@ -222,6 +249,14 @@ export default function Dashboard() {
                   <>
                     <polyline points={pointsToStr(currentShape)} fill="none"
                       stroke={C[drawTool]?.stroke||'#446444'} strokeWidth="1.5" strokeDasharray="4,3"/>
+                    {/* Preview line to cursor */}
+                    {mousePos && (
+                      <line
+                        x1={currentShape[currentShape.length-1].x}
+                        y1={currentShape[currentShape.length-1].y}
+                        x2={mousePos.x} y2={mousePos.y}
+                        stroke={C[drawTool]?.stroke||'#446444'} strokeWidth="1" strokeDasharray="4,3" opacity="0.5"/>
+                    )}
                     {currentShape.map((pt, i) => (
                       <circle key={i} cx={pt.x} cy={pt.y} r={i===0?7:4}
                         fill={i===0?C[drawTool]?.stroke||'#446444':'white'}
@@ -439,6 +474,7 @@ export default function Dashboard() {
               </div>
               <input placeholder="Søk…" value={plantSearch} onChange={e=>setPlantSearch(e.target.value)}
                 style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}} autoFocus/>
+              {addError && <div style={{fontSize:12,color:'#dc2626',marginTop:8,padding:'6px 10px',background:'#fee2e2',borderRadius:8}}>{addError}</div>}
             </div>
             <div style={{overflowY:'auto',padding:12,flex:1}}>
               {CAT_ORDER.map(cat => {
@@ -450,8 +486,9 @@ export default function Dashboard() {
                     <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
                       {items.map(plant => (
                         <button key={plant.key} onClick={()=>addPlant(plant.key)}
-                          style={{display:'flex',alignItems:'center',gap:10,padding:12,borderRadius:12,border:'1px solid transparent',cursor:'pointer',background:'none',fontFamily:'inherit',textAlign:'left',width:'100%',transition:'all .12s'}}
-                          onMouseOver={e=>{e.currentTarget.style.background='#f4f7f4';e.currentTarget.style.borderColor='#cddccd'}}
+                          disabled={adding}
+                          style={{display:'flex',alignItems:'center',gap:10,padding:12,borderRadius:12,border:'1px solid transparent',cursor:adding?'wait':'pointer',background:'none',fontFamily:'inherit',textAlign:'left',width:'100%',transition:'all .12s',opacity:adding?0.6:1}}
+                          onMouseOver={e=>{if(!adding){e.currentTarget.style.background='#f4f7f4';e.currentTarget.style.borderColor='#cddccd'}}}
                           onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.borderColor='transparent'}}>
                           <span style={{fontSize:20,flexShrink:0}}>{plant.emoji}</span>
                           <div>
