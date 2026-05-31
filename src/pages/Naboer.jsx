@@ -9,7 +9,7 @@ export default function Naboer() {
         <div style={{fontSize:48,marginBottom:16}}>🏡</div>
         <div style={{fontSize:16,fontWeight:400,color:'#4a3f38',marginBottom:8}}>Naboer kommer snart</div>
         <div style={{fontSize:13,color:'#a09080',lineHeight:1.7,maxWidth:360,margin:'0 auto'}}>
-          Her vil du kunne se andres hager, bytte tips og bli inspirert av naboer i nærheten. Funksjonen er under utvikling.
+          Her vil du kunne se venner og naboer sine hager, bli inspirert og dele tips. Funksjonen er under utvikling.
         </div>
       </div>
     </div>

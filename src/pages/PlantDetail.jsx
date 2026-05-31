@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { PLANT_MAP, plantDesc, LOG_ACTIVITIES } from '../lib/plantData'
 
-const TABS = ['Info','Logg','Bilder','Skadedyr','Høst']
+const TABS = ['Info','Logg','Bilder','Innhøsting']
 
 export default function PlantDetail() {
   const { id } = useParams()
@@ -81,6 +81,12 @@ export default function PlantDetail() {
     if (ph) setPhotos(prev => [ph, ...prev])
     setPhotoNote('')
     setUploading(false)
+  }
+
+  async function deletePhoto(photo) {
+    await supabase.storage.from('plant-photos').remove([photo.storage_path])
+    await supabase.from('plant_photos').delete().eq('id', photo.id)
+    setPhotos(prev => prev.filter(p => p.id !== photo.id))
   }
 
 
@@ -266,14 +272,18 @@ export default function PlantDetail() {
             <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',marginBottom:14}}>Bildelogg</div>
 
             {/* Last opp */}
-            <label style={{display:'block',border:'2px dashed #e7e5e4',borderRadius:14,padding:24,textAlign:'center',cursor:'pointer',marginBottom:16,background:uploading?'#f9f9f8':'white'}}>
-              <input type="file" accept="image/*" style={{display:'none'}}
-                onChange={e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]) }}
-                disabled={uploading}/>
-              <div style={{fontSize:28,marginBottom:6}}>{uploading ? '⏳' : '📷'}</div>
-              <div style={{fontSize:13,fontWeight:500,color:'#44403c'}}>{uploading ? 'Laster opp…' : '+ Last opp bilde'}</div>
-              <div style={{fontSize:11,color:'#a8a29e',marginTop:4}}>Klikk for å velge fra galleriet</div>
-            </label>
+            <div style={{marginBottom:16}}>
+              <label style={{display:'block',border:'2px dashed #e7e5e4',borderRadius:14,padding:20,textAlign:'center',cursor:'pointer',marginBottom:8,background:uploading?'#f9f9f8':'white'}}>
+                <input type="file" accept="image/*" style={{display:'none'}}
+                  onChange={e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]) }}
+                  disabled={uploading}/>
+                <div style={{fontSize:24,marginBottom:4}}>{uploading ? '⏳' : '📷'}</div>
+                <div style={{fontSize:13,fontWeight:500,color:'#44403c'}}>{uploading ? 'Laster opp…' : '+ Last opp bilde'}</div>
+              </label>
+              <input value={photoNote} onChange={e=>setPhotoNote(e.target.value)}
+                placeholder="Legg til kommentar (valgfritt)…"
+                style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+            </div>
 
             {/* Bildegrid */}
             {photos.length === 0 ? (
@@ -281,7 +291,7 @@ export default function PlantDetail() {
             ) : (
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
                 {photos.map(ph => (
-                  <PhotoCard key={ph.id} photo={ph} supabase={supabase}/>
+                  <PhotoCard key={ph.id} photo={ph} supabase={supabase} onDelete={deletePhoto}/>
                 ))}
               </div>
             )}
@@ -289,28 +299,9 @@ export default function PlantDetail() {
         </div>
       )}
 
-      {/* ── SKADEDYR ── */}
-      {activeTab === 'Skadedyr' && (
-        <div style={s.card}>
-          <div style={{padding:22}}>
-            <div style={{fontSize:14,fontWeight:500,color:'#292524',marginBottom:16}}>Vanlige skadedyr og sykdommer</div>
-            {info?.pests && info.pests.length > 0 ? info.pests.map((p, i) => (
-              <div key={i} style={{border:'1px solid #f5f5f4',borderRadius:14,padding:16,marginBottom:10}}>
-                <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:4}}>🐛 {p.name}</div>
-                <div style={{fontSize:12,color:'#78716c',marginBottom:8}}>{p.description}</div>
-                <div style={{fontSize:12,color:'#57534e',background:'#f4f7f4',borderRadius:8,padding:'8px 12px'}}>
-                  <strong>Behandling:</strong> {p.treatment}
-                </div>
-              </div>
-            )) : (
-              <div style={{textAlign:'center',padding:24,color:'#a8a29e',fontSize:13}}>Ingen kjente skadedyrproblemer for denne planten.</div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* ── HØST ── */}
-      {activeTab === 'Høst' && (
+      {/* ── INNHØSTING ── */}
+      {activeTab === 'Innhøsting' && (
         <div style={s.card}>
           <div style={{padding:20}}>
             <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',marginBottom:14}}>Høstregistrering</div>
@@ -394,7 +385,7 @@ export default function PlantDetail() {
   )
 }
 
-function PhotoCard({ photo, supabase }) {
+function PhotoCard({ photo, supabase, onDelete }) {
   const [url, setUrl] = useState(null)
   useEffect(() => {
     supabase.storage.from('plant-photos').createSignedUrl(photo.storage_path, 3600)
@@ -407,10 +398,14 @@ function PhotoCard({ photo, supabase }) {
         : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>⏳</div>
       }
       {photo.note && (
-        <div style={{position:'absolute',bottom:0,left:0,right:0,background:'rgba(0,0,0,.45)',color:'white',fontSize:10,padding:'4px 6px'}}>
+        <div style={{position:'absolute',bottom:0,left:0,right:0,background:'rgba(0,0,0,.55)',color:'white',fontSize:10,padding:'4px 6px'}}>
           {photo.note}
         </div>
       )}
+      <button onClick={()=>onDelete(photo)}
+        style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'white',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>
+        ×
+      </button>
     </div>
   )
 }

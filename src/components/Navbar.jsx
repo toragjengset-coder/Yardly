@@ -2,11 +2,10 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 const NAV = [
-  { path:'/dashboard', label:'Hagen',    icon:'🗺️' },
-  { path:'/calendar',  label:'Kalender', icon:'📅' },
-  { path:'/harvest',   label:'Høst',     icon:'🥦' },
-  { path:'/naboer',    label:'Naboer',   icon:'👥' },
-  { path:'/profile',   label:'Profil',   icon:'🌿' },
+  { path:'/dashboard', label:'Hagen min',    icon:'🌸' },
+  { path:'/calendar',  label:'Kalender',     icon:'📅' },
+  { path:'/harvest',   label:'Innhøsting',   icon:'🍎' },
+  { path:'/naboer',    label:'Naboer',       icon:'👥' },
 ]
 
 export default function Navbar() {

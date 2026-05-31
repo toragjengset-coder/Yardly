@@ -438,27 +438,47 @@ export default function Dashboard() {
 
       {plants.length === 0 ? (
         <div style={{textAlign:'center',padding:32,color:'#a8a29e',fontSize:13}}>
-          Trykk «+ Legg til plante» og klikk i hagen for å komme i gang 🌱
+          Klikk i hagen for å legge til din første plante 🌱
         </div>
       ) : (
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
-          {plants.map(p => {
-            const info = PLANT_MAP[p.plant_key]
-            return (
-              <div key={p.id} className="plant-card"
-                style={{background:'white',borderRadius:16,border:'1px solid #f5f5f4',padding:16,cursor:'pointer',position:'relative',transition:'box-shadow .12s',boxShadow:'0 1px 3px rgba(0,0,0,.04)'}}
-                onClick={()=>navigate(`/plant/${p.id}`)}>
-                <button onClick={e=>{e.stopPropagation();deletePlant(p.id)}}
-                  title="Slett"
-                  style={{position:'absolute',top:8,right:8,width:22,height:22,borderRadius:'50%',border:'none',background:'#fee2e2',color:'#dc2626',fontSize:13,lineHeight:1,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-                  ×
-                </button>
-                <div style={{fontSize:24,marginBottom:6}}>{info?.emoji || '🌱'}</div>
-                <div style={{fontSize:13,fontWeight:500,color:'#292524',marginBottom:2,paddingRight:20}}>{info?.name || p.plant_key}</div>
-                <div style={{fontSize:11,color:'#a8a29e'}}>{CAT_LABELS[info?.cat] || ''}</div>
+        <div style={{background:'white',borderRadius:16,border:'1px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden'}}>
+          {(() => {
+            const catGroups = {}
+            const catOrder = ['grønnsak','bær','frukt','urt','rose','staude','busk','tre','prydplante']
+            const catNames = {
+              grønnsak:'Grønnsaker', bær:'Bær', frukt:'Frukt', urt:'Urter',
+              rose:'Roser', staude:'Blomster og stauder', busk:'Busker', tre:'Trær', prydplante:'Prydplanter'
+            }
+            plants.forEach(p => {
+              const cat = PLANT_MAP[p.plant_key]?.cat || 'annet'
+              if (!catGroups[cat]) catGroups[cat] = []
+              catGroups[cat].push(p)
+            })
+            return catOrder.filter(c => catGroups[c]).map((cat, ci) => (
+              <div key={cat}>
+                <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',padding:'10px 16px 4px',background:'#faf9f8'}}>
+                  {catNames[cat]}
+                </div>
+                {catGroups[cat].map((p, i) => {
+                  const info = PLANT_MAP[p.plant_key]
+                  const isLast = i === catGroups[cat].length - 1
+                  return (
+                    <div key={p.id} className="plant-card"
+                      style={{display:'flex',alignItems:'center',padding:'11px 16px',cursor:'pointer',borderBottom: isLast ? 'none' : '1px solid #f5f5f4',transition:'background .1s'}}
+                      onClick={()=>navigate(`/plant/${p.id}`)}>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13,fontWeight:500,color:'#292524'}}>{info?.name || p.plant_key}</div>
+                      </div>
+                      <button onClick={e=>{e.stopPropagation();deletePlant(p.id)}}
+                        style={{width:22,height:22,borderRadius:'50%',border:'none',background:'#fee2e2',color:'#dc2626',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                        ×
+                      </button>
+                    </div>
+                  )
+                })}
               </div>
-            )
-          })}
+            ))
+          })()}
         </div>
       )}
 

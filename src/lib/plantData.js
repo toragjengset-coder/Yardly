@@ -44,7 +44,7 @@ export const PLANT_DB = [
   { key:'rosenkål',     name:'Rosenkål',     emoji:'🥬', cat:'grønnsak', harvest:true,  pricePerKg:28,
     seasonal:{3:['Så innendørs'],5:['Plant ut'],9:['Høst nedenfra'],10:['Høst etter frost — bedre smak'],11:['Høst resten']} },
   { key:'spinat',       name:'Spinat',       emoji:'🥬', cat:'grønnsak', harvest:true,  pricePerKg:40,
-    seasonal:{4:['Så direkte'],5:['Tynn ut'],6:['Høst ytterblader'],7:['Høst alt — trekker opp i varme']} },
+    seasonal:{4:['Så direkte'],5:['Tynn ut til 5 cm mellomrom hvis sådd i april'],6:['Innhøsting av ytterblader'],7:['Innhøsting — trekker opp i varme, så ny runde i august']} },
   { key:'salat',        name:'Salat',        emoji:'🥗', cat:'grønnsak', harvest:true,  pricePerKg:30,
     seasonal:{4:['Så innendørs/ute'],5:['Plant ut'],6:['Høst ytterblader'],7:['Høst hele hoder'],8:['Ny sårunde']} },
   { key:'paprika',      name:'Paprika',      emoji:'🫑', cat:'grønnsak', harvest:true,  pricePerKg:50,
@@ -79,7 +79,7 @@ export const PLANT_DB = [
     seasonal:{7:['Så direkte — bolter lett i varme'],8:['Høst'],9:['Høst']} },
   // ─────────────── BÆR ───────────────
   { key:'jordbær',      name:'Jordbær',      emoji:'🍓', cat:'bær', harvest:true,  pricePerKg:60,
-    seasonal:{3:['Fjern gammelt løv'],4:['Gjødsle med bærgjødsel','Plant nye planter'],5:['Legg ut jordbærhalm'],6:['Høst daglig','Fjern utløpere'],7:['Høst siste bær'],8:['Klipp ned løv','Gjødsle for neste år']} },
+    seasonal:{3:['Fjern gammelt løv'],4:['Gjødsle med bærgjødsel','Plant nye planter'],5:['Legg ut jordbærhalm under plantene — beskytter bærene som kommer'],6:['Innhøsting daglig','Fjern utløpere'],7:['Innhøsting av siste bær'],8:['Klipp ned løv','Gjødsle for neste år']} },
   { key:'bringebær',    name:'Bringebær',    emoji:'🍒', cat:'bær', harvest:true,  pricePerKg:80,
     seasonal:{3:['Beskjær brukte skudd til bakken'],4:['Gjødsle med bærgjødsel'],7:['Høst daglig — modner raskt'],8:['Klipp ned brukte skudd, la nye stå']} },
   { key:'solbær',       name:'Solbær',       emoji:'🫐', cat:'bær', harvest:true,  pricePerKg:50,
@@ -102,7 +102,7 @@ export const PLANT_DB = [
     seasonal:{4:['Gjødsle med sur gjødsel'],5:['Blomstring'],8:['Høst'],9:['Høst resten']} },
   // ─────────────── FRUKT ───────────────
   { key:'eple',         name:'Epletre',      emoji:'🍎', cat:'frukt', harvest:true,  pricePerKg:25,
-    seasonal:{3:['Beskjær treet'],4:['Gjødsle med frukttregjødsel'],5:['Tynn ut frukter etter blomstring'],7:['Sjekk for skurv'],8:['Høst tidlige sorter'],9:['Høst sene sorter'],10:['Rydde fallne epler']} },
+    seasonal:{3:['Beskjær treet'],4:['Gjødsle med frukttregjødsel'],5:['Blomstring'],6:['Tynn ut unge epleknotter — la én per klase stå'],7:['Sjekk for skurv'],8:['Innhøsting av tidlige sorter'],9:['Innhøsting av sene sorter'],10:['Rydde fallne epler']} },
   { key:'pære',         name:'Pæretre',      emoji:'🍐', cat:'frukt', harvest:true,  pricePerKg:30,
     seasonal:{3:['Beskjær'],4:['Gjødsle'],5:['Tynn ut frukter'],8:['Høst tidligsorter'],9:['Høst resten']} },
   { key:'plomme',       name:'Plommetre',    emoji:'🟣', cat:'frukt', harvest:true,  pricePerKg:35,

@@ -50,15 +50,15 @@ export default function HarvestOverview() {
 
   return (
     <div style={{maxWidth:700}}>
-      <h1 style={{fontSize:20,fontWeight:300,color:'#3d3530',marginBottom:4}}>Høstlogg</h1>
+      <h1 style={{fontSize:20,fontWeight:300,color:'#3d3530',marginBottom:4}}>Innhøsting</h1>
       <div style={{fontSize:12,color:'#a09080',marginBottom:24}}>Grønnsaker, bær og frukt</div>
 
       {/* Stats */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
         {[
-          ['Totalt høstet', totalKg > 0 ? `${totalKg.toFixed(1)} kg` : '0 kg'],
+          ['Totalt innhøstet', totalKg > 0 ? `${totalKg.toFixed(1)} kg` : '0 kg'],
           ['Estimert verdi', totalValue > 0 ? `${totalValue.toFixed(0)} kr` : '0 kr'],
-          ['Høstinger', harvests.length],
+          ['Registreringer', harvests.length],
         ].map(([label, val]) => (
           <div key={label} style={{...card, padding:16}}>
             <div style={{fontSize:11,color:'#a09080',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>{label}</div>
