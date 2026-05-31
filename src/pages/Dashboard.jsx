@@ -45,6 +45,7 @@ export default function Dashboard() {
   const [addError, setAddError] = useState('')
   const [adding, setAdding] = useState(false)
   const [modalTab, setModalTab] = useState('planter')
+  const [collapsedCats, setCollapsedCats] = useState({})
   const pendingPosRef = useRef(null)
   const drawSvgRef = useRef(null)
   const mapSvgRef = useRef(null)
@@ -432,8 +433,11 @@ export default function Dashboard() {
       </div>
 
       {/* Plant list */}
-      <div style={{fontSize:11,fontWeight:500,textTransform:'uppercase',letterSpacing:'.06em',color:'#78716c',marginBottom:12}}>
-        Dine planter ({plants.length})
+      <div style={{marginBottom:8}}>
+        <div style={{fontSize:20,fontWeight:500,color:'#292524'}}>Mine planter</div>
+        <div style={{fontSize:13,color:'#a8a29e',marginTop:2}}>
+          Trykk på planten for å få informasjon, loggføre vedlikehold og lage bildelogg
+        </div>
       </div>
 
       {plants.length === 0 ? (
@@ -441,7 +445,7 @@ export default function Dashboard() {
           Klikk i hagen for å legge til din første plante 🌱
         </div>
       ) : (
-        <div style={{background:'white',borderRadius:16,border:'1px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden'}}>
+        <div style={{background:'white',borderRadius:16,border:'1px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginTop:12}}>
           {(() => {
             const catGroups = {}
             const catOrder = ['grønnsak','bær','frukt','urt','rose','staude','busk','tre','prydplante']
@@ -454,30 +458,49 @@ export default function Dashboard() {
               if (!catGroups[cat]) catGroups[cat] = []
               catGroups[cat].push(p)
             })
-            return catOrder.filter(c => catGroups[c]).map((cat, ci) => (
-              <div key={cat}>
-                <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',padding:'10px 16px 4px',background:'#faf9f8'}}>
-                  {catNames[cat]}
-                </div>
-                {catGroups[cat].map((p, i) => {
-                  const info = PLANT_MAP[p.plant_key]
-                  const isLast = i === catGroups[cat].length - 1
-                  return (
-                    <div key={p.id} className="plant-card"
-                      style={{display:'flex',alignItems:'center',padding:'11px 16px',cursor:'pointer',borderBottom: isLast ? 'none' : '1px solid #f5f5f4',transition:'background .1s'}}
-                      onClick={()=>navigate(`/plant/${p.id}`)}>
-                      <div style={{flex:1}}>
-                        <div style={{fontSize:13,fontWeight:500,color:'#292524'}}>{info?.name || p.plant_key}</div>
+            // Beregn nummer per plant_key
+            const keyCount = {}
+            const keyIndex = {}
+            plants.forEach(p => { keyCount[p.plant_key] = (keyCount[p.plant_key] || 0) + 1 })
+            function getPlantLabel(p) {
+              const info = PLANT_MAP[p.plant_key]
+              const name = info?.name || p.plant_key
+              if (keyCount[p.plant_key] <= 1) return name
+              keyIndex[p.plant_key] = (keyIndex[p.plant_key] || 0) + 1
+              return `${name} ${keyIndex[p.plant_key]}`
+            }
+            // Reset index before render
+            Object.keys(keyIndex).forEach(k => delete keyIndex[k])
+            return catOrder.filter(c => catGroups[c]).map((cat) => {
+              const isCollapsed = collapsedCats[cat]
+              return (
+                <div key={cat}>
+                  <button
+                    onClick={() => setCollapsedCats(prev => ({...prev, [cat]: !prev[cat]}))}
+                    style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',padding:'10px 16px 8px',background:'#faf9f8',border:'none',cursor:'pointer',fontFamily:'inherit',textAlign:'left'}}>
+                    <span>{catNames[cat]} ({catGroups[cat].length})</span>
+                    <span style={{fontSize:11,opacity:.6}}>{isCollapsed ? '▸' : '▾'}</span>
+                  </button>
+                  {!isCollapsed && catGroups[cat].map((p, i) => {
+                    const isLast = i === catGroups[cat].length - 1
+                    const label = getPlantLabel(p)
+                    return (
+                      <div key={p.id} className="plant-card"
+                        style={{display:'flex',alignItems:'center',padding:'11px 16px',cursor:'pointer',borderBottom: isLast ? 'none' : '1px solid #f5f5f4',transition:'background .1s'}}
+                        onClick={()=>navigate(`/plant/${p.id}`)}>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:13,fontWeight:500,color:'#292524'}}>{label}</div>
+                        </div>
+                        <button onClick={e=>{e.stopPropagation();deletePlant(p.id)}}
+                          style={{width:22,height:22,borderRadius:'50%',border:'none',background:'#fee2e2',color:'#dc2626',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                          ×
+                        </button>
                       </div>
-                      <button onClick={e=>{e.stopPropagation();deletePlant(p.id)}}
-                        style={{width:22,height:22,borderRadius:'50%',border:'none',background:'#fee2e2',color:'#dc2626',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                        ×
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            ))
+                    )
+                  })}
+                </div>
+              )
+            })
           })()}
         </div>
       )}

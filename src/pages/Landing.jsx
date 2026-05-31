@@ -1,7 +1,7 @@
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { useEffect } from 'react'
-import gardenBg from '/garden-bg.jpg'
+import gardenBg from '/IMG_7043.jpg'
 
 export default function Landing() {
   const { user, signInWithGoogle } = useAuth()
@@ -34,7 +34,7 @@ export default function Landing() {
       {/* Frosted glass-kort */}
       <div style={{
         position:'relative', zIndex:2,
-        maxWidth:480, width:'calc(100% - 48px)',
+        maxWidth:640, width:'calc(100% - 48px)',
         background:'rgba(250,248,245,0.72)',
         backdropFilter:'blur(18px)',
         WebkitBackdropFilter:'blur(18px)',
@@ -66,50 +66,45 @@ export default function Landing() {
 
         <div style={{position:'relative', zIndex:1, padding:'40px 36px 36px'}}>
           {/* Logo */}
-          <div style={{fontSize:14,fontWeight:600,color:'#375037',marginBottom:32}}>🌿 Yardly</div>
+          <div style={{fontSize:14,fontWeight:600,color:'#375037',marginBottom:32,textAlign:'center'}}>Yardly</div>
 
           {/* Headline */}
-          <h1 style={{fontSize:36,fontWeight:300,lineHeight:1.2,color:'#292524',marginBottom:10}}>
+          <h1 style={{fontSize:36,fontWeight:300,lineHeight:1.2,color:'#292524',marginBottom:10,textAlign:'center'}}>
             Hagedataen din,<br/>
             <span style={{color:'#446444'}}>samlet på ett sted</span>
           </h1>
-          <p style={{fontSize:14,color:'#78716c',lineHeight:1.6,marginBottom:28,maxWidth:340}}>
+          <p style={{fontSize:14,color:'#78716c',lineHeight:1.6,marginBottom:28,textAlign:'center'}}>
             Tegn opp hagen, logg plantene dine og få personlige råd basert på klima og sesong.
           </p>
 
           {/* Google-knapp */}
-          <button onClick={signInWithGoogle} style={{
-            display:'inline-flex', alignItems:'center', gap:10,
-            background:'white', color:'#44403c',
-            padding:'11px 22px', borderRadius:12, fontSize:13, fontWeight:500,
-            boxShadow:'0 1px 4px rgba(0,0,0,.08)', cursor:'pointer',
-            border:'1px solid #e7e5e4', fontFamily:'inherit', transition:'box-shadow .15s',
-            marginBottom:32,
-          }}
-            onMouseOver={e => e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,.13)'}
-            onMouseOut={e => e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.08)'}
-          >
-            <svg width="16" height="16" viewBox="0 0 18 18">
-              <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
-              <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
-              <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
-              <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-            </svg>
-            Logg inn med Google
-          </button>
+          <div style={{display:'flex',justifyContent:'center',marginBottom:32}}>
+            <button onClick={signInWithGoogle} style={{
+              display:'inline-flex', alignItems:'center', gap:10,
+              background:'white', color:'#44403c',
+              padding:'11px 22px', borderRadius:12, fontSize:13, fontWeight:500,
+              boxShadow:'0 1px 4px rgba(0,0,0,.08)', cursor:'pointer',
+              border:'1px solid #e7e5e4', fontFamily:'inherit', transition:'box-shadow .15s',
+            }}
+              onMouseOver={e => e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,.13)'}
+              onMouseOut={e => e.currentTarget.style.boxShadow='0 1px 4px rgba(0,0,0,.08)'}
+            >
+              <svg width="16" height="16" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+                <path fill="#FBBC05" d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+              </svg>
+              Logg inn med Google
+            </button>
+          </div>
 
-          {/* Features */}
-          <div style={{borderTop:'1px solid rgba(0,0,0,.07)',paddingTop:24,display:'flex',flexDirection:'column',gap:16}}>
+          {/* Features - 3 kolonner side om side */}
+          <div style={{borderTop:'1px solid rgba(0,0,0,.07)',paddingTop:24,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
             {features.map(f => (
-              <div key={f.title} style={{display:'flex',gap:12,alignItems:'flex-start'}}>
-                <div style={{
-                  width:6,height:6,borderRadius:'50%',background:'#6d9d64',
-                  marginTop:5,flexShrink:0,
-                }}/>
-                <div>
-                  <div style={{fontSize:13,fontWeight:500,color:'#3d3530'}}>{f.title}</div>
-                  <div style={{fontSize:12,color:'#8a7f78',marginTop:1,lineHeight:1.5}}>{f.desc}</div>
-                </div>
+              <div key={f.title} style={{textAlign:'center'}}>
+                <div style={{fontSize:13,fontWeight:500,color:'#3d3530',marginBottom:4}}>{f.title}</div>
+                <div style={{fontSize:11,color:'#8a7f78',lineHeight:1.5}}>{f.desc}</div>
               </div>
             ))}
           </div>
