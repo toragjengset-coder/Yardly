@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import { PLANT_MAP, plantDesc, LOG_ACTIVITIES } from '../lib/plantData'
 
-const TABS = ['Info','Logg','Bilder','Skadedyr','Høst','ID']
+const TABS = ['Info','Logg','Bilder','Skadedyr','Høst']
 
 export default function PlantDetail() {
   const { id } = useParams()
@@ -14,8 +14,16 @@ export default function PlantDetail() {
   const [logs, setLogs] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('Info')
-  const [showForm, setShowForm] = useState(null) // activity type being logged
+  const [showForm, setShowForm] = useState(null)
   const [comment, setComment] = useState('')
+  const [photos, setPhotos] = useState([])
+  const [uploading, setUploading] = useState(false)
+  const [photoNote, setPhotoNote] = useState('')
+  const [harvests, setHarvests] = useState([])
+  const [showHarvestForm, setShowHarvestForm] = useState(false)
+  const [harvestKg, setHarvestKg] = useState('')
+  const [harvestDate, setHarvestDate] = useState(new Date().toISOString().split('T')[0])
+  const [harvestNote, setHarvestNote] = useState('')
 
   useEffect(() => { load() }, [id])
 
@@ -25,8 +33,56 @@ export default function PlantDetail() {
     setPlantRecord(p)
     const { data: l } = await supabase.from('plant_logs').select('*').eq('garden_plant_id', id).order('logged_at', { ascending: false })
     setLogs(l || [])
+    const { data: ph } = await supabase.from('plant_photos').select('*').eq('garden_plant_id', id).order('taken_at', { ascending: false })
+    setPhotos(ph || [])
+    const { data: hv } = await supabase.from('harvest_logs').select('*').eq('garden_plant_id', id).order('harvested_at', { ascending: false })
+    setHarvests(hv || [])
     setLoading(false)
   }
+
+  async function saveHarvest() {
+    const kg = parseFloat(harvestKg)
+    if (!kg || kg <= 0) { alert('Fyll inn mengde i kg'); return }
+    const plant = PLANT_MAP[plantRecord.plant_key]
+    const { data } = await supabase.from('harvest_logs').insert({
+      garden_plant_id: id,
+      user_id: user.id,
+      kg,
+      estimated_value_nok: plant?.pricePerKg ? +(kg * plant.pricePerKg).toFixed(0) : null,
+      notes: harvestNote.trim() || null,
+      harvested_at: harvestDate,
+    }).select().single()
+    if (data) setHarvests(prev => [data, ...prev])
+    setShowHarvestForm(false)
+    setHarvestKg('')
+    setHarvestNote('')
+    setHarvestDate(new Date().toISOString().split('T')[0])
+  }
+
+  async function deleteHarvest(hid) {
+    await supabase.from('harvest_logs').delete().eq('id', hid)
+    setHarvests(prev => prev.filter(h => h.id !== hid))
+  }
+
+  async function uploadPhoto(file) {
+    if (!file || !user) return
+    setUploading(true)
+    const ext = file.name.split('.').pop()
+    const path = `${user.id}/${id}/${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('plant-photos').upload(path, file)
+    if (uploadError) { alert('Feil ved opplasting: ' + uploadError.message); setUploading(false); return }
+    const { data: ph } = await supabase.from('plant_photos').insert({
+      garden_plant_id: id,
+      user_id: user.id,
+      storage_path: path,
+      note: photoNote.trim() || null,
+      taken_at: new Date().toISOString().split('T')[0],
+    }).select().single()
+    if (ph) setPhotos(prev => [ph, ...prev])
+    setPhotoNote('')
+    setUploading(false)
+  }
+
 
   async function logActivity(actType) {
     const act = LOG_ACTIVITIES.find(a => a.type === actType)
@@ -105,19 +161,6 @@ export default function PlantDetail() {
         <div style={s.card}>
           <div style={{padding:22}}>
             <div style={{fontSize:13,color:'#57534e',lineHeight:1.7,marginBottom:18}}>{desc}</div>
-            {info?.seasonal && (
-              <div style={{marginBottom:18}}>
-                <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',marginBottom:12}}>Sesongoppgaver</div>
-                {Object.entries(info.seasonal).sort((a,b)=>+a[0]-+b[0]).map(([month, tasks]) => (
-                  <div key={month} style={{display:'flex',gap:12,padding:'8px 0',borderBottom:'1px solid #f5f5f4'}}>
-                    <div style={{width:60,flexShrink:0,fontSize:12,fontWeight:500,color:'#78716c'}}>
-                      {['Jan','Feb','Mar','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Des'][+month-1]}
-                    </div>
-                    <div>{tasks.map((t,i) => <div key={i} style={{fontSize:12,color:'#57534e',marginBottom:2}}>• {t}</div>)}</div>
-                  </div>
-                ))}
-              </div>
-            )}
             <div style={{borderTop:'1px solid #f5f5f4',paddingTop:14,display:'flex',gap:8,flexWrap:'wrap'}}>
               <a href={`https://www.plantasjen.no/search?q=${encodeURIComponent(info?.name||plantRecord.plant_key)}`}
                 target="_blank" rel="noreferrer"
@@ -218,15 +261,31 @@ export default function PlantDetail() {
 
       {/* ── BILDER ── */}
       {activeTab === 'Bilder' && (
-        <div style={{...s.card, padding:24, textAlign:'center'}}>
-          <div style={{fontSize:32,marginBottom:12}}>📸</div>
-          <div style={{fontSize:14,fontWeight:500,color:'#44403c',marginBottom:8}}>Bildelogg</div>
-          <div style={{background:'#f4f7f4',border:'1px solid #cddccd',borderRadius:12,padding:'14px 18px',fontSize:13,color:'#587f58',textAlign:'left'}}>
-            Bildeopplasting aktiveres når appen er publisert på server. Bildene lagres da i Supabase Storage knyttet til din konto.
+        <div style={s.card}>
+          <div style={{padding:20}}>
+            <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',marginBottom:14}}>Bildelogg</div>
+
+            {/* Last opp */}
+            <label style={{display:'block',border:'2px dashed #e7e5e4',borderRadius:14,padding:24,textAlign:'center',cursor:'pointer',marginBottom:16,background:uploading?'#f9f9f8':'white'}}>
+              <input type="file" accept="image/*" style={{display:'none'}}
+                onChange={e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]) }}
+                disabled={uploading}/>
+              <div style={{fontSize:28,marginBottom:6}}>{uploading ? '⏳' : '📷'}</div>
+              <div style={{fontSize:13,fontWeight:500,color:'#44403c'}}>{uploading ? 'Laster opp…' : '+ Last opp bilde'}</div>
+              <div style={{fontSize:11,color:'#a8a29e',marginTop:4}}>Klikk for å velge fra galleriet</div>
+            </label>
+
+            {/* Bildegrid */}
+            {photos.length === 0 ? (
+              <div style={{textAlign:'center',padding:'20px 0',color:'#a8a29e',fontSize:13}}>Ingen bilder ennå — last opp det første!</div>
+            ) : (
+              <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+                {photos.map(ph => (
+                  <PhotoCard key={ph.id} photo={ph} supabase={supabase}/>
+                ))}
+              </div>
+            )}
           </div>
-          <button disabled style={{marginTop:16,padding:'10px 20px',borderRadius:10,border:'none',background:'#cddccd',color:'white',fontSize:13,fontWeight:500,cursor:'not-allowed'}}>
-            + Last opp bilde
-          </button>
         </div>
       )}
 
@@ -252,38 +311,104 @@ export default function PlantDetail() {
 
       {/* ── HØST ── */}
       {activeTab === 'Høst' && (
-        <div style={{...s.card, padding:24}}>
-          {info?.harvest ? (
-            <>
-              <div style={{fontSize:14,fontWeight:500,color:'#292524',marginBottom:16}}>Høstregistrering</div>
-              <div style={{textAlign:'center',padding:24,color:'#a8a29e',fontSize:13}}>
-                <div style={{fontSize:32,marginBottom:8}}>🧺</div>
-                Registrer mengde og dato etter høsting for å se sesongens totale avling.
+        <div style={s.card}>
+          <div style={{padding:20}}>
+            <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',marginBottom:14}}>Høstregistrering</div>
+
+            {/* Totalsum */}
+            {harvests.length > 0 && (
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
+                <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 16px'}}>
+                  <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Totalt høstet</div>
+                  <div style={{fontSize:18,fontWeight:500,color:'#375037'}}>{harvests.reduce((s,h)=>s+h.kg,0).toFixed(1)} kg</div>
+                </div>
+                <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 16px'}}>
+                  <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Estimert verdi</div>
+                  <div style={{fontSize:18,fontWeight:500,color:'#375037'}}>
+                    {harvests.some(h=>h.estimated_value_nok) ? harvests.reduce((s,h)=>s+(h.estimated_value_nok||0),0) + ' kr' : '—'}
+                  </div>
+                </div>
               </div>
-              <button style={{width:'100%',padding:'10px 20px',borderRadius:10,border:'none',background:'#375037',color:'white',fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>
+            )}
+
+            {/* Skjema */}
+            {showHarvestForm ? (
+              <div style={{background:'#f4f7f4',borderRadius:12,padding:16,marginBottom:16}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+                  <div>
+                    <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Mengde (kg)</div>
+                    <input type="number" min="0.01" step="0.01" value={harvestKg} onChange={e=>setHarvestKg(e.target.value)}
+                      placeholder="0.5"
+                      style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Dato</div>
+                    <input type="date" value={harvestDate} onChange={e=>setHarvestDate(e.target.value)}
+                      style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+                  </div>
+                </div>
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Notat (valgfritt)</div>
+                  <input value={harvestNote} onChange={e=>setHarvestNote(e.target.value)}
+                    placeholder="F.eks. god smak, tidlig høst…"
+                    style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+                </div>
+                <div style={{display:'flex',gap:8}}>
+                  <button onClick={saveHarvest} style={{padding:'8px 18px',borderRadius:9,border:'none',background:'#375037',color:'white',fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>Lagre</button>
+                  <button onClick={()=>setShowHarvestForm(false)} style={{padding:'8px 14px',borderRadius:9,border:'1px solid #e7e5e4',background:'white',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>Avbryt</button>
+                </div>
+              </div>
+            ) : (
+              <button onClick={()=>setShowHarvestForm(true)}
+                style={{width:'100%',padding:'10px 20px',borderRadius:10,border:'none',background:'#375037',color:'white',fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'inherit',marginBottom:16}}>
                 + Registrer høst
               </button>
-            </>
-          ) : (
-            <div style={{textAlign:'center',padding:32,color:'#a8a29e',fontSize:13}}>
-              <div style={{fontSize:32,marginBottom:8}}>🌸</div>
-              Denne planten registreres ikke som høstplante.
-            </div>
-          )}
+            )}
+
+            {/* Historikk */}
+            {harvests.map((h, i) => (
+              <div key={h.id} style={{display:'flex',alignItems:'center',gap:12,padding:'10px 0',borderTop:'1px solid #f5f5f4'}}>
+                <span style={{fontSize:20}}>🧺</span>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:500,color:'#44403c'}}>{h.kg} kg</div>
+                  <div style={{fontSize:11,color:'#a8a29e'}}>
+                    {new Date(h.harvested_at).toLocaleDateString('no-NO',{day:'numeric',month:'short',year:'numeric'})}
+                    {h.estimated_value_nok ? ` · ${h.estimated_value_nok} kr` : ''}
+                  </div>
+                  {h.notes && <div style={{fontSize:12,color:'#78716c',marginTop:3}}>{h.notes}</div>}
+                </div>
+                <button onClick={()=>deleteHarvest(h.id)} style={{border:'none',background:'none',color:'#d6d3d1',cursor:'pointer',fontSize:16}}
+                  onMouseOver={e=>e.currentTarget.style.color='#78716c'}
+                  onMouseOut={e=>e.currentTarget.style.color='#d6d3d1'}>×</button>
+              </div>
+            ))}
+
+            {harvests.length === 0 && !showHarvestForm && (
+              <div style={{textAlign:'center',padding:'16px 0',color:'#a8a29e',fontSize:13}}>Ingen høster registrert ennå.</div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* ── ID ── */}
-      {activeTab === 'ID' && (
-        <div style={{...s.card, padding:24, textAlign:'center'}}>
-          <div style={{fontSize:32,marginBottom:12}}>🔍</div>
-          <div style={{fontSize:14,fontWeight:500,color:'#44403c',marginBottom:8}}>Planteidentifikasjon</div>
-          <div style={{background:'#f4f7f4',border:'1px solid #cddccd',borderRadius:12,padding:'14px 18px',fontSize:13,color:'#587f58',textAlign:'left'}}>
-            Planteidentifikasjon via bilde aktiveres når appen kjøres på server — den bruker Plant.id API (gratis for 100 identifiseringer/dag).
-          </div>
-          <button disabled style={{marginTop:16,padding:'10px 20px',borderRadius:10,border:'none',background:'#cddccd',color:'white',fontSize:13,fontWeight:500,cursor:'not-allowed'}}>
-            Ta bilde for identifikasjon
-          </button>
+    </div>
+  )
+}
+
+function PhotoCard({ photo, supabase }) {
+  const [url, setUrl] = useState(null)
+  useEffect(() => {
+    supabase.storage.from('plant-photos').createSignedUrl(photo.storage_path, 3600)
+      .then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl) })
+  }, [photo.storage_path])
+  return (
+    <div style={{borderRadius:10,overflow:'hidden',background:'#f5f5f4',aspectRatio:'1',position:'relative'}}>
+      {url
+        ? <img src={url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
+        : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>⏳</div>
+      }
+      {photo.note && (
+        <div style={{position:'absolute',bottom:0,left:0,right:0,background:'rgba(0,0,0,.45)',color:'white',fontSize:10,padding:'4px 6px'}}>
+          {photo.note}
         </div>
       )}
     </div>

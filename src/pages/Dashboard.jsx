@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [mousePos, setMousePos] = useState(null)
   const [addError, setAddError] = useState('')
   const [adding, setAdding] = useState(false)
+  const [modalTab, setModalTab] = useState('planter')
   const pendingPosRef = useRef(null)
   const drawSvgRef = useRef(null)
   const mapSvgRef = useRef(null)
@@ -465,40 +466,75 @@ export default function Dashboard() {
       {showModal && (
         <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.3)',backdropFilter:'blur(3px)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:16}}>
           <div style={{background:'white',borderRadius:20,width:'100%',maxWidth:420,maxHeight:'80vh',display:'flex',flexDirection:'column',boxShadow:'0 8px 40px rgba(0,0,0,.15)'}}>
-            <div style={{padding:'18px 20px 14px',borderBottom:'1px solid #f5f5f4'}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
-                <div style={{fontSize:15,fontWeight:500,color:'#292524'}}>Velg plante</div>
-                <button onClick={()=>{setShowModal(false);setPendingPos(null);setPlantSearch('')}} style={{border:'none',background:'none',cursor:'pointer',fontSize:18,color:'#a8a29e'}}>✕</button>
+
+            {/* Header */}
+            <div style={{padding:'18px 20px 0'}}>
+              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
+                <div style={{fontSize:15,fontWeight:500,color:'#292524'}}>Legg til plante</div>
+                <button onClick={()=>{setShowModal(false);setPendingPos(null);setPlantSearch('');setModalTab('planter')}} style={{border:'none',background:'none',cursor:'pointer',fontSize:18,color:'#a8a29e'}}>✕</button>
               </div>
-              <input placeholder="Søk…" value={plantSearch} onChange={e=>setPlantSearch(e.target.value)}
-                style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}} autoFocus/>
-              {addError && <div style={{fontSize:12,color:'#dc2626',marginTop:8,padding:'6px 10px',background:'#fee2e2',borderRadius:8}}>{addError}</div>}
+              <div style={{display:'flex',background:'#f5f5f4',borderRadius:10,padding:3,gap:2,marginBottom:14}}>
+                {[['planter','🌿 Planter'],['identifiser','🔍 Vet du ikke hva det er?']].map(([key,label]) => (
+                  <button key={key} onClick={()=>setModalTab(key)} style={{
+                    flex:1,padding:'7px 10px',borderRadius:8,border:'none',cursor:'pointer',
+                    fontSize:12,fontWeight:500,fontFamily:'inherit',
+                    background:modalTab===key?'white':'transparent',
+                    color:modalTab===key?'#292524':'#78716c',
+                    boxShadow:modalTab===key?'0 1px 3px rgba(0,0,0,.08)':'none',
+                  }}>{label}</button>
+                ))}
+              </div>
             </div>
-            <div style={{overflowY:'auto',padding:12,flex:1}}>
-              {CAT_ORDER.map(cat => {
-                const items = filteredBySearch[cat] || []
-                if (items.length === 0) return null
-                return (
-                  <div key={cat}>
-                    <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',padding:'8px 4px 4px'}}>{CAT_LABELS[cat]}</div>
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                      {items.map(plant => (
-                        <button key={plant.key} onClick={()=>addPlant(plant.key, pendingPos)}
-                          disabled={adding}
-                          style={{display:'flex',alignItems:'center',gap:10,padding:12,borderRadius:12,border:'1px solid transparent',cursor:adding?'wait':'pointer',background:'none',fontFamily:'inherit',textAlign:'left',width:'100%',transition:'all .12s',opacity:adding?0.6:1}}
-                          onMouseOver={e=>{if(!adding){e.currentTarget.style.background='#f4f7f4';e.currentTarget.style.borderColor='#cddccd'}}}
-                          onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.borderColor='transparent'}}>
-                          <span style={{fontSize:20,flexShrink:0}}>{plant.emoji}</span>
-                          <div>
-                            <div style={{fontSize:13,fontWeight:500,color:'#292524'}}>{plant.name}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+
+            {/* Planter-fane */}
+            {modalTab === 'planter' && (
+              <>
+                <div style={{padding:'0 20px 12px',borderBottom:'1px solid #f5f5f4'}}>
+                  <input placeholder="Søk…" value={plantSearch} onChange={e=>setPlantSearch(e.target.value)}
+                    style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}} autoFocus/>
+                  {addError && <div style={{fontSize:12,color:'#dc2626',marginTop:8,padding:'6px 10px',background:'#fee2e2',borderRadius:8}}>{addError}</div>}
+                </div>
+                <div style={{overflowY:'auto',padding:12,flex:1}}>
+                  {CAT_ORDER.map(cat => {
+                    const items = filteredBySearch[cat] || []
+                    if (items.length === 0) return null
+                    return (
+                      <div key={cat}>
+                        <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',padding:'8px 4px 4px'}}>{CAT_LABELS[cat]}</div>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
+                          {items.map(plant => (
+                            <button key={plant.key} onClick={()=>addPlant(plant.key, pendingPos)}
+                              disabled={adding}
+                              style={{display:'flex',alignItems:'center',gap:10,padding:12,borderRadius:12,border:'1px solid transparent',cursor:adding?'wait':'pointer',background:'none',fontFamily:'inherit',textAlign:'left',width:'100%',transition:'all .12s',opacity:adding?0.6:1}}
+                              onMouseOver={e=>{if(!adding){e.currentTarget.style.background='#f4f7f4';e.currentTarget.style.borderColor='#cddccd'}}}
+                              onMouseOut={e=>{e.currentTarget.style.background='none';e.currentTarget.style.borderColor='transparent'}}>
+                              <span style={{fontSize:20,flexShrink:0}}>{plant.emoji}</span>
+                              <div><div style={{fontSize:13,fontWeight:500,color:'#292524'}}>{plant.name}</div></div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Identifiser-fane */}
+            {modalTab === 'identifiser' && (
+              <div style={{padding:24,flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',textAlign:'center'}}>
+                <div style={{fontSize:48,marginBottom:16}}>🌿</div>
+                <div style={{fontSize:15,fontWeight:500,color:'#292524',marginBottom:10}}>Vet du ikke hva planten er?</div>
+                <div style={{fontSize:13,color:'#78716c',lineHeight:1.6,marginBottom:24,maxWidth:300}}>
+                  Ta et bilde av planten med Google Lens — den gjenkjenner de fleste planter på sekunder. Kom tilbake hit og søk den opp i lista etterpå.
+                </div>
+                <a href="https://lens.google.com" target="_blank" rel="noreferrer"
+                  style={{display:'inline-flex',alignItems:'center',gap:8,padding:'12px 24px',borderRadius:12,background:'#375037',color:'white',fontSize:14,fontWeight:500,textDecoration:'none'}}>
+                  🔍 Åpne Google Lens
+                </a>
+              </div>
+            )}
+
           </div>
         </div>
       )}
