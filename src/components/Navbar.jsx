@@ -34,7 +34,7 @@ export default function Navbar() {
 
   return (
     <nav style={s.sidebar}>
-      <div style={s.logo}>🌿 Yardly</div>
+      <div style={s.logo}>Yardly</div>
       {NAV.map(item => (
         <button
           key={item.path}

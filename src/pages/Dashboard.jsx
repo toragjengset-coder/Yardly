@@ -433,19 +433,20 @@ export default function Dashboard() {
       </div>
 
       {/* Plant list */}
-      <div style={{marginBottom:8}}>
-        <div style={{fontSize:20,fontWeight:500,color:'#292524'}}>Mine planter</div>
-        <div style={{fontSize:13,color:'#a8a29e',marginTop:2}}>
-          Trykk på planten for å få informasjon, loggføre vedlikehold og lage bildelogg
+      <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
+        <div style={{padding:'16px 18px',borderBottom:'1px solid #f5f5f4'}}>
+          <div style={{fontSize:20,fontWeight:500,color:'#292524'}}>Mine planter</div>
+          <div style={{fontSize:13,color:'#a8a29e',marginTop:2}}>
+            Trykk på en plante for informasjon, loggføring og bildelogg
+          </div>
         </div>
-      </div>
 
       {plants.length === 0 ? (
         <div style={{textAlign:'center',padding:32,color:'#a8a29e',fontSize:13}}>
           Klikk i hagen for å legge til din første plante 🌱
         </div>
       ) : (
-        <div style={{background:'white',borderRadius:16,border:'1px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginTop:12}}>
+        <div style={{overflow:'hidden'}}>
           {(() => {
             const catGroups = {}
             const catOrder = ['grønnsak','bær','frukt','urt','rose','staude','busk','tre','prydplante']
@@ -491,6 +492,7 @@ export default function Dashboard() {
                         <div style={{flex:1}}>
                           <div style={{fontSize:13,fontWeight:500,color:'#292524'}}>{label}</div>
                         </div>
+                        <span style={{fontSize:12,color:'#c8c4c0',marginRight:6}}>→</span>
                         <button onClick={e=>{e.stopPropagation();deletePlant(p.id)}}
                           style={{width:22,height:22,borderRadius:'50%',border:'none',background:'#fee2e2',color:'#dc2626',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
                           ×
@@ -504,6 +506,7 @@ export default function Dashboard() {
           })()}
         </div>
       )}
+      </div>
 
       {/* Plant picker modal */}
       {showModal && (

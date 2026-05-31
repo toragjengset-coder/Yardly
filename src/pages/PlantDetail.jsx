@@ -19,6 +19,7 @@ export default function PlantDetail() {
   const [photos, setPhotos] = useState([])
   const [uploading, setUploading] = useState(false)
   const [photoNote, setPhotoNote] = useState('')
+  const [pendingFile, setPendingFile] = useState(null)
   const [harvests, setHarvests] = useState([])
   const [showHarvestForm, setShowHarvestForm] = useState(false)
   const [harvestKg, setHarvestKg] = useState('')
@@ -273,16 +274,32 @@ export default function PlantDetail() {
 
             {/* Last opp */}
             <div style={{marginBottom:16}}>
-              <label style={{display:'block',border:'2px dashed #e7e5e4',borderRadius:14,padding:20,textAlign:'center',cursor:'pointer',marginBottom:8,background:uploading?'#f9f9f8':'white'}}>
-                <input type="file" accept="image/*" style={{display:'none'}}
-                  onChange={e => { if (e.target.files[0]) uploadPhoto(e.target.files[0]) }}
-                  disabled={uploading}/>
-                <div style={{fontSize:24,marginBottom:4}}>{uploading ? '⏳' : '📷'}</div>
-                <div style={{fontSize:13,fontWeight:500,color:'#44403c'}}>{uploading ? 'Laster opp…' : '+ Last opp bilde'}</div>
-              </label>
-              <input value={photoNote} onChange={e=>setPhotoNote(e.target.value)}
-                placeholder="Legg til kommentar (valgfritt)…"
-                style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}}/>
+              {!pendingFile ? (
+                <label style={{display:'block',border:'2px dashed #e7e5e4',borderRadius:14,padding:20,textAlign:'center',cursor:'pointer',background:'white'}}>
+                  <input type="file" accept="image/*" style={{display:'none'}}
+                    onChange={e => { if (e.target.files[0]) setPendingFile(e.target.files[0]) }}/>
+                  <div style={{fontSize:24,marginBottom:4}}>📷</div>
+                  <div style={{fontSize:13,fontWeight:500,color:'#44403c'}}>+ Last opp bilde</div>
+                </label>
+              ) : (
+                <div style={{background:'#f4f7f4',borderRadius:14,padding:16}}>
+                  <div style={{fontSize:13,fontWeight:500,color:'#292524',marginBottom:10}}>📷 {pendingFile.name}</div>
+                  <input value={photoNote} onChange={e=>setPhotoNote(e.target.value)}
+                    placeholder="Legg til kommentar (valgfritt)…"
+                    style={{width:'100%',padding:'8px 12px',borderRadius:8,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none',marginBottom:10}}/>
+                  <div style={{display:'flex',gap:8}}>
+                    <button onClick={async()=>{ await uploadPhoto(pendingFile); setPendingFile(null) }}
+                      disabled={uploading}
+                      style={{padding:'8px 18px',borderRadius:9,border:'none',background:'#375037',color:'white',fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>
+                      {uploading ? 'Laster opp…' : 'Lagre'}
+                    </button>
+                    <button onClick={()=>{ setPendingFile(null); setPhotoNote('') }}
+                      style={{padding:'8px 14px',borderRadius:9,border:'1px solid #e7e5e4',background:'white',fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>
+                      Avbryt
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Bildegrid */}
@@ -304,13 +321,13 @@ export default function PlantDetail() {
       {activeTab === 'Innhøsting' && (
         <div style={s.card}>
           <div style={{padding:20}}>
-            <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',marginBottom:14}}>Høstregistrering</div>
+            <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.06em',color:'#a8a29e',marginBottom:14}}>Innhøstingsregistrering</div>
 
             {/* Totalsum */}
             {harvests.length > 0 && (
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
                 <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 16px'}}>
-                  <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Totalt høstet</div>
+                  <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Totalt innhøstet</div>
                   <div style={{fontSize:18,fontWeight:500,color:'#375037'}}>{harvests.reduce((s,h)=>s+h.kg,0).toFixed(1)} kg</div>
                 </div>
                 <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 16px'}}>
@@ -352,7 +369,7 @@ export default function PlantDetail() {
             ) : (
               <button onClick={()=>setShowHarvestForm(true)}
                 style={{width:'100%',padding:'10px 20px',borderRadius:10,border:'none',background:'#375037',color:'white',fontSize:13,fontWeight:500,cursor:'pointer',fontFamily:'inherit',marginBottom:16}}>
-                + Registrer høst
+                + Registrer innhøsting
               </button>
             )}
 
@@ -375,7 +392,7 @@ export default function PlantDetail() {
             ))}
 
             {harvests.length === 0 && !showHarvestForm && (
-              <div style={{textAlign:'center',padding:'16px 0',color:'#a8a29e',fontSize:13}}>Ingen høster registrert ennå.</div>
+              <div style={{textAlign:'center',padding:'16px 0',color:'#a8a29e',fontSize:13}}>Ingen innhøstinger registrert ennå.</div>
             )}
           </div>
         </div>

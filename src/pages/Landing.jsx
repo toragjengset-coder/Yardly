@@ -12,9 +12,9 @@ export default function Landing() {
   }, [user])
 
   const features = [
-    { title: 'Hagekartet',       desc: 'Tegn opp hagen og plott plantene dine' },
-    { title: 'Sesongkalender',   desc: 'Automatiske oppgaver basert på plantene dine og hvor du bor' },
-    { title: 'Vekstkurve',       desc: 'Bildelogg per plante — se utviklingen over tid' },
+    { title: 'Hagekartet',     desc: 'Tegn opp hagen og plott plantene dine' },
+    { title: 'Sesongkalender', desc: 'Automatiske oppgaver basert på plantene dine og hvor du bor' },
+    { title: 'Plantelogg',     desc: 'Loggfør vedlikehold, ta bilder og registrer innhøsting' },
   ]
 
   return (
@@ -30,6 +30,16 @@ export default function Landing() {
         backgroundSize:'cover', backgroundPosition:'center',
         filter:'brightness(0.88)',
       }} />
+
+      {/* Yardly-logo øverst til venstre */}
+      <div style={{
+        position:'absolute', top:28, left:32, zIndex:10,
+        fontSize:22, fontWeight:600, color:'white',
+        textShadow:'0 1px 6px rgba(0,0,0,.4)',
+        letterSpacing:'.01em',
+      }}>
+        Yardly
+      </div>
 
       {/* Frosted glass-kort */}
       <div style={{
@@ -65,9 +75,6 @@ export default function Landing() {
         </div>
 
         <div style={{position:'relative', zIndex:1, padding:'40px 36px 36px'}}>
-          {/* Logo */}
-          <div style={{fontSize:14,fontWeight:600,color:'#375037',marginBottom:32,textAlign:'center'}}>Yardly</div>
-
           {/* Headline */}
           <h1 style={{fontSize:36,fontWeight:300,lineHeight:1.2,color:'#292524',marginBottom:10,textAlign:'center'}}>
             Hagedataen din,<br/>
@@ -103,8 +110,8 @@ export default function Landing() {
           <div style={{borderTop:'1px solid rgba(0,0,0,.07)',paddingTop:24,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
             {features.map(f => (
               <div key={f.title} style={{textAlign:'center'}}>
-                <div style={{fontSize:13,fontWeight:500,color:'#3d3530',marginBottom:4}}>{f.title}</div>
-                <div style={{fontSize:11,color:'#8a7f78',lineHeight:1.5}}>{f.desc}</div>
+                <div style={{fontSize:15,fontWeight:500,color:'#3d3530',marginBottom:5}}>{f.title}</div>
+                <div style={{fontSize:13,color:'#8a7f78',lineHeight:1.5}}>{f.desc}</div>
               </div>
             ))}
           </div>
