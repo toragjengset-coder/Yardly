@@ -49,7 +49,7 @@ function ProtectedLayout() {
   return (
     <div className="min-h-screen bg-cream flex">
       <Navbar />
-      <main className="flex-1 ml-56 p-8 max-w-4xl">
+      <main className="yardly-main flex-1 ml-56 p-8 max-w-4xl" style={{minWidth:0}}>
         <Outlet />
       </main>
     </div>

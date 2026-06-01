@@ -46,6 +46,7 @@ export default function Dashboard() {
   const [adding, setAdding] = useState(false)
   const [modalTab, setModalTab] = useState('planter')
   const [collapsedCats, setCollapsedCats] = useState({})
+  const [dashTab, setDashTab] = useState('hagen')
   const pendingPosRef = useRef(null)
   const drawSvgRef = useRef(null)
   const mapSvgRef = useRef(null)
@@ -381,20 +382,27 @@ export default function Dashboard() {
     <div style={{fontFamily:"'Inter',system-ui,sans-serif"}}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}} .plant-card:hover{box-shadow:0 4px 14px rgba(0,0,0,.08)!important}`}</style>
 
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18}}>
-        <div>
-          <div style={{fontSize:20,fontWeight:500,color:'#292524'}}>Hagen min</div>
-          <div style={{fontSize:13,color:'#a8a29e',marginTop:2}}>
-            {garden ? `${garden.width_m}×${garden.height_m}m · ${garden.city} · ${garden.direction}` : 'Sett opp hagen for å begynne'}
-          </div>
-        </div>
-        <div style={{display:'flex',gap:8}}>
-          <button onClick={()=>{setView('setup');setSetupStep(1)}} style={{padding:'8px 14px',borderRadius:10,fontSize:12,fontWeight:500,border:'1px solid #e7e5e4',background:'white',cursor:'pointer',fontFamily:'inherit'}}>✏️ Tegn på nytt</button>
-        </div>
+      {/* Topprad */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+        <div style={{fontSize:20,fontWeight:500,color:'#292524'}}>Hagen min</div>
+        <button onClick={()=>{setView('setup');setSetupStep(1)}} style={{padding:'7px 13px',borderRadius:10,fontSize:12,fontWeight:500,border:'1px solid #e7e5e4',background:'white',cursor:'pointer',fontFamily:'inherit'}}>✏️ Tegn på nytt</button>
+      </div>
+
+      {/* Faner */}
+      <div style={{display:'flex',background:'#f5f5f4',padding:3,borderRadius:12,gap:2,marginBottom:18}}>
+        {[['hagen','🗺 Hagen min'],['planter','🌿 Mine planter']].map(([key,label]) => (
+          <button key={key} onClick={()=>setDashTab(key)} style={{
+            flex:1,padding:'9px 12px',borderRadius:10,border:'none',cursor:'pointer',
+            fontSize:13,fontWeight:500,fontFamily:'inherit',
+            background:dashTab===key?'white':'transparent',
+            color:dashTab===key?'#292524':'#78716c',
+            boxShadow:dashTab===key?'0 1px 3px rgba(0,0,0,.08)':'none',
+          }}>{label}</button>
+        ))}
       </div>
 
       {/* Map card */}
-      <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
+      {dashTab === 'hagen' && <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
         <div style={{display:'flex',alignItems:'center',padding:'12px 16px',borderBottom:'1px solid #f5f5f4',background:'white',gap:8}}>
           <span style={{fontSize:12,color:'#78716c'}}>
             🌱 Klikk i hagen for å legge til plante
@@ -430,10 +438,10 @@ export default function Dashboard() {
             </span>
           ))}
         </div>
-      </div>
+      </div>}
 
       {/* Plant list */}
-      <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
+      {dashTab === 'planter' && <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
         <div style={{padding:'16px 18px',borderBottom:'1px solid #f5f5f4'}}>
           <div style={{fontSize:20,fontWeight:500,color:'#292524'}}>Mine planter</div>
           <div style={{fontSize:13,color:'#a8a29e',marginTop:2}}>
@@ -506,7 +514,7 @@ export default function Dashboard() {
           })()}
         </div>
       )}
-      </div>
+      </div>}
 
       {/* Plant picker modal */}
       {showModal && (
