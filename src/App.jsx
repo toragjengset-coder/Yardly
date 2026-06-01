@@ -8,6 +8,7 @@ import SeasonalCalendar from './pages/SeasonalCalendar'
 import HarvestOverview from './pages/HarvestOverview'
 import Profile from './pages/Profile'
 import Naboer from './pages/Naboer'
+import Admin from './pages/Admin'
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/profile"     element={<Profile />} />
           </Route>
 
+          <Route path="/admin" element={<Admin />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

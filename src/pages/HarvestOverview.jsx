@@ -8,22 +8,20 @@ const card = { background:'white', borderRadius:16, boxShadow:'0 1px 4px rgba(0,
 
 export default function HarvestOverview() {
   const { user } = useAuth()
-  const [garden, setGarden]     = useState(null)
-  const [plants, setPlants]     = useState([])   // all garden_plants with harvest:true
-  const [harvests, setHarvests] = useState([])   // harvest_logs
+  const [plants, setPlants]     = useState([])
+  const [harvests, setHarvests] = useState([])
   const [loading, setLoading]   = useState(true)
+  const [editId, setEditId]     = useState(null)
+  const [editData, setEditData] = useState({})
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { data: g } = await supabase.from('gardens').select('*').eq('user_id', user.id).single()
+    const { data: g } = await supabase.from('gardens').select('id').eq('user_id', user.id).single()
     if (g) {
-      setGarden(g)
-      const { data: gp } = await supabase.from('garden_plants').select('id, plant_key, added_at').eq('garden_id', g.id)
-      const harvestPlants = (gp || []).filter(p => PLANT_MAP[p.plant_key]?.harvest)
-      setPlants(harvestPlants)
-
-      if (harvestPlants.length > 0) {
-        const ids = harvestPlants.map(p => p.id)
+      const { data: gp } = await supabase.from('garden_plants').select('id, plant_key').eq('garden_id', g.id)
+      setPlants(gp || [])
+      const ids = (gp || []).map(p => p.id)
+      if (ids.length > 0) {
         const { data: h } = await supabase
           .from('harvest_logs')
           .select('*')
@@ -31,6 +29,8 @@ export default function HarvestOverview() {
           .eq('user_id', user.id)
           .order('harvested_at', { ascending: false })
         setHarvests(h || [])
+      } else {
+        setHarvests([])
       }
     }
     setLoading(false)
@@ -38,8 +38,35 @@ export default function HarvestOverview() {
 
   useEffect(() => { load() }, [load])
 
-  const totalKg    = harvests.reduce((s, h) => s + (parseFloat(h.kg) || 0), 0)
-  const totalValue = harvests.reduce((s, h) => s + (parseFloat(h.estimated_value_nok) || 0), 0)
+  const plantName = (gardenPlantId) => {
+    const gp = plants.find(p => p.id === gardenPlantId)
+    return gp ? (PLANT_MAP[gp.plant_key]?.name || gp.plant_key) : '–'
+  }
+  const plantEmoji = (gardenPlantId) => {
+    const gp = plants.find(p => p.id === gardenPlantId)
+    return gp ? (PLANT_MAP[gp.plant_key]?.emoji || '🌱') : '🌱'
+  }
+
+  const startEdit = (h) => {
+    setEditId(h.id)
+    setEditData({ kg: h.kg || '', notes: h.notes || '', harvested_at: h.harvested_at?.slice(0,10) || '' })
+  }
+
+  const saveEdit = async () => {
+    await supabase.from('harvest_logs').update({
+      kg: editData.kg ? parseFloat(editData.kg) : null,
+      notes: editData.notes || null,
+      harvested_at: editData.harvested_at || null,
+    }).eq('id', editId)
+    setEditId(null)
+    load()
+  }
+
+  const deleteEntry = async (id) => {
+    if (!confirm('Slett denne innhøstingen?')) return
+    await supabase.from('harvest_logs').delete().eq('id', id)
+    setHarvests(prev => prev.filter(h => h.id !== id))
+  }
 
   if (loading) return (
     <div style={{display:'flex',alignItems:'center',justifyContent:'center',height:200}}>
@@ -50,69 +77,66 @@ export default function HarvestOverview() {
 
   return (
     <div style={{maxWidth:700}}>
-      <h1 style={{fontSize:20,fontWeight:300,color:'#3d3530',marginBottom:4}}>Innhøsting</h1>
-      <div style={{fontSize:12,color:'#a09080',marginBottom:24}}>Grønnsaker, bær og frukt</div>
+      <h1 style={{fontSize:20,fontWeight:300,color:'#3d3530',marginBottom:24}}>Innhøsting</h1>
 
-      {/* Stats */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:12,marginBottom:20}}>
-        {[
-          ['Totalt innhøstet', totalKg > 0 ? `${totalKg.toFixed(1)} kg` : '0 kg'],
-          ['Estimert verdi', totalValue > 0 ? `${totalValue.toFixed(0)} kr` : '0 kr'],
-          ['Registreringer', harvests.length],
-        ].map(([label, val]) => (
-          <div key={label} style={{...card, padding:16}}>
-            <div style={{fontSize:11,color:'#a09080',textTransform:'uppercase',letterSpacing:'.05em',marginBottom:4}}>{label}</div>
-            <div style={{fontSize:22,fontWeight:300,color:'#3d3530'}}>{val}</div>
-          </div>
-        ))}
-      </div>
-
-      {plants.length === 0 ? (
-        <div style={{...card, padding:40, textAlign:'center'}}>
-          <div style={{fontSize:32,marginBottom:8}}>🧺</div>
-          <div style={{fontSize:13,color:'#a09080'}}>Legg til grønnsaker, bær eller frukt i hagen for å logge høsting</div>
+      {harvests.length === 0 ? (
+        <div style={{...card, padding:48, textAlign:'center'}}>
+          <div style={{fontSize:36,marginBottom:12}}>🧺</div>
+          <div style={{fontSize:13,color:'#a09080',lineHeight:1.6}}>Loggfør innhøsting på en av plantene dine for å få oversikt her</div>
         </div>
       ) : (
-        plants.map(mp => {
-          const info = PLANT_MAP[mp.plant_key]
-          const plantHarvests = harvests.filter(h => h.garden_plant_id === mp.id)
-          const addedDate = mp.added_at
-            ? new Date(mp.added_at).toLocaleDateString('no-NO', {day:'numeric',month:'short',year:'numeric'})
-            : ''
-
-          return (
-            <div key={mp.id} style={{...card, padding:20, marginBottom:12}}>
-              <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
-                <span style={{fontSize:26}}>{info?.emoji || '🌱'}</span>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:500,color:'#4a3f38'}}>{info?.name || mp.plant_key}</div>
-                  <div style={{fontSize:12,color:'#a09080',marginTop:1}}>Lagt til {addedDate}</div>
+        harvests.map(h => (
+          <div key={h.id} style={{...card, padding:'16px 20px', marginBottom:10}}>
+            {editId === h.id ? (
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                  <span style={{fontSize:20}}>{plantEmoji(h.garden_plant_id)}</span>
+                  <span style={{fontSize:13,fontWeight:500,color:'#4a3f38'}}>{plantName(h.garden_plant_id)}</span>
                 </div>
-                <Link to={`/plant/${mp.id}`} style={{
-                  padding:'7px 14px',borderRadius:10,border:'1px solid #c8e6c4',background:'#f0f7ef',
-                  color:'#4a7a4a',fontSize:12,fontWeight:500,textDecoration:'none',
-                }}>+ Logg høsting</Link>
+                <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+                  <input
+                    type="number" step="0.1" placeholder="Vekt (kg)"
+                    value={editData.kg}
+                    onChange={e => setEditData(d => ({...d, kg:e.target.value}))}
+                    style={{border:'1px solid #e7e5e4',borderRadius:8,padding:'6px 10px',fontSize:13,width:120,fontFamily:'inherit'}}
+                  />
+                  <input
+                    type="date"
+                    value={editData.harvested_at}
+                    onChange={e => setEditData(d => ({...d, harvested_at:e.target.value}))}
+                    style={{border:'1px solid #e7e5e4',borderRadius:8,padding:'6px 10px',fontSize:13,fontFamily:'inherit'}}
+                  />
+                </div>
+                <input
+                  type="text" placeholder="Kommentar"
+                  value={editData.notes}
+                  onChange={e => setEditData(d => ({...d, notes:e.target.value}))}
+                  style={{border:'1px solid #e7e5e4',borderRadius:8,padding:'6px 10px',fontSize:13,fontFamily:'inherit'}}
+                />
+                <div style={{display:'flex',gap:8,marginTop:4}}>
+                  <button onClick={saveEdit} style={{background:'#f0f7ef',border:'1px solid #c8e6c4',color:'#4a7a4a',borderRadius:8,padding:'6px 14px',fontSize:12,fontWeight:500,cursor:'pointer',fontFamily:'inherit'}}>Lagre</button>
+                  <button onClick={() => setEditId(null)} style={{background:'none',border:'1px solid #e7e5e4',color:'#a09080',borderRadius:8,padding:'6px 14px',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Avbryt</button>
+                </div>
               </div>
-
-              {plantHarvests.length === 0 ? (
-                <div style={{fontSize:12,color:'#a09080',textAlign:'center',padding:'8px 0'}}>Ingen høstinger logget ennå</div>
-              ) : (
-                plantHarvests.map(h => (
-                  <div key={h.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderTop:'1px solid #f5f0eb'}}>
-                    <div>
-                      <span style={{fontSize:13,color:'#4a3f38'}}>{h.kg ? `${h.kg} kg` : '—'}</span>
-                      {h.estimated_value_nok && <span style={{fontSize:12,color:'#a09080',marginLeft:8}}>≈ {h.estimated_value_nok} kr</span>}
-                      {h.notes && <div style={{fontSize:11,color:'#a09080',marginTop:2}}>{h.notes}</div>}
-                    </div>
-                    <span style={{fontSize:11,color:'#a09080'}}>
-                      {h.harvested_at ? new Date(h.harvested_at).toLocaleDateString('no-NO',{day:'numeric',month:'short'}) : ''}
-                    </span>
+            ) : (
+              <div style={{display:'flex',alignItems:'center',gap:12}}>
+                <span style={{fontSize:22}}>{plantEmoji(h.garden_plant_id)}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:500,color:'#4a3f38'}}>{plantName(h.garden_plant_id)}</div>
+                  <div style={{fontSize:12,color:'#78716c',marginTop:2}}>
+                    {h.kg ? `${h.kg} kg` : '–'}
+                    {h.harvested_at ? ` · ${new Date(h.harvested_at).toLocaleDateString('no-NO',{day:'numeric',month:'short',year:'numeric'})}` : ''}
+                    {h.notes ? ` · ${h.notes}` : ''}
                   </div>
-                ))
-              )}
-            </div>
-          )
-        })
+                </div>
+                <div style={{display:'flex',gap:6,flexShrink:0}}>
+                  <button onClick={() => startEdit(h)} style={{background:'none',border:'1px solid #e7e5e4',color:'#78716c',borderRadius:8,padding:'5px 10px',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Rediger</button>
+                  <button onClick={() => deleteEntry(h.id)} style={{background:'none',border:'1px solid #fecaca',color:'#ef4444',borderRadius:8,padding:'5px 10px',fontSize:12,cursor:'pointer',fontFamily:'inherit'}}>Slett</button>
+                </div>
+              </div>
+            )}
+          </div>
+        ))
       )}
     </div>
   )

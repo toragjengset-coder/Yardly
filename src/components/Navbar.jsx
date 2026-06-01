@@ -37,7 +37,7 @@ export default function Navbar() {
         height:'100vh', zIndex:20, overflowY:'auto',
         fontFamily:"'Inter',system-ui,sans-serif",
       }}>
-        <div style={{fontSize:15,fontWeight:600,color:'#375037',marginBottom:32}}>Yardly</div>
+        <Link to="/" style={{fontSize:15,fontWeight:600,color:'#375037',marginBottom:32,textDecoration:'none',display:'block'}}>Yardly</Link>
 
         {NAV.map(item => (
           <button key={item.path}

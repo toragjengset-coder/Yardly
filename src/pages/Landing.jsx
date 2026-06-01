@@ -106,8 +106,12 @@ export default function Landing() {
             </button>
           </div>
 
-          {/* Features - 3 kolonner side om side */}
-          <div style={{borderTop:'1px solid rgba(0,0,0,.07)',paddingTop:24,display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:16}}>
+          {/* Features */}
+          <style>{`
+            .yardly-features { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
+            @media (max-width: 500px) { .yardly-features { grid-template-columns: 1fr; gap: 12px; } }
+          `}</style>
+          <div className="yardly-features" style={{borderTop:'1px solid rgba(0,0,0,.07)',paddingTop:24}}>
             {features.map(f => (
               <div key={f.title} style={{textAlign:'center'}}>
                 <div style={{fontSize:15,fontWeight:500,color:'#3d3530',marginBottom:5}}>{f.title}</div>
