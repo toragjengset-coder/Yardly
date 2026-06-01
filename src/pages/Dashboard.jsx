@@ -471,37 +471,13 @@ export default function Dashboard() {
                 <span style={{fontSize:12,color:'#78716c'}}>🍂 Første høstfrost: <strong>{cityData.firstFrost}</strong></span>
                 <span style={{fontSize:12,color:'#78716c'}}>🌱 Sesong: <strong>{cityData.season}</strong></span>
               </div>
-              <a href="https://www.hageselskapet.no/planteskolen/hardforhetsoner" target="_blank" rel="noreferrer"
-                style={{fontSize:12,color:'#446444',textDecoration:'underline'}}>
-                Se oversikt over hardførhetsoner →
-              </a>
             </div>
             {/* Retning */}
             <div style={{borderTop:'1px solid #f5f0eb',paddingTop:14}}>
               <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:6}}>
                 🧭 {dirFull}vendt — {dirData.sun}
               </div>
-              <div style={{fontSize:13,color:'#57534e',lineHeight:1.6,marginBottom:10}}>{dirData.hint}</div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
-                <div>
-                  <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:5}}>Passer godt:</div>
-                  <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
-                    {dirData.goodFor.slice(0,4).map(p => (
-                      <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#e8f5e2',color:'#375037'}}>{p}</span>
-                    ))}
-                  </div>
-                </div>
-                {dirData.avoid.length > 0 && (
-                  <div>
-                    <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:5}}>Vær obs på:</div>
-                    <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
-                      {dirData.avoid.slice(0,3).map(p => (
-                        <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#fef3c7',color:'#92400e'}}>{p}</span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <div style={{fontSize:13,color:'#57534e',lineHeight:1.6}}>{dirData.hint}</div>
             </div>
           </div>
         )

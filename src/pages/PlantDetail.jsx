@@ -167,9 +167,15 @@ export default function PlantDetail() {
       {activeTab === 'Info' && (
         <div style={s.card}>
           <div style={{padding:22}}>
-            <div style={{fontSize:13,color:'#57534e',lineHeight:1.7,marginBottom:18}}>{desc}</div>
+            <div style={{fontSize:13,color:'#57534e',lineHeight:1.7,marginBottom:info?.care ? 12 : 18}}>{desc}</div>
+            {info?.care && (
+              <div style={{background:'#f7faf6',border:'1px solid #d4e8cf',borderRadius:10,padding:'10px 14px',marginBottom:18}}>
+                <div style={{fontSize:11,fontWeight:600,textTransform:'uppercase',letterSpacing:'.05em',color:'#587f58',marginBottom:5}}>Vedlikehold</div>
+                <div style={{fontSize:13,color:'#3d4a3d',lineHeight:1.6}}>{info.care}</div>
+              </div>
+            )}
             <div style={{borderTop:'1px solid #f5f5f4',paddingTop:14,display:'flex',gap:8,flexWrap:'wrap'}}>
-              <a href={`https://www.plantasjen.no/search?q=${encodeURIComponent(info?.name||plantRecord.plant_key)}`}
+              <a href={`https://www.google.com/search?q=${encodeURIComponent((info?.name||plantRecord.plant_key)+' site:plantasjen.no')}`}
                 target="_blank" rel="noreferrer"
                 style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:9,border:'1px solid #e7e5e4',fontSize:12,fontWeight:500,color:'#57534e',textDecoration:'none',background:'white',transition:'border-color .12s'}}
                 onMouseOver={e=>e.currentTarget.style.borderColor='#7a9f7a'}
@@ -182,6 +188,13 @@ export default function PlantDetail() {
                 onMouseOver={e=>e.currentTarget.style.borderColor='#7a9f7a'}
                 onMouseOut={e=>e.currentTarget.style.borderColor='#e7e5e4'}>
                 🔍 Dyrketips
+              </a>
+              <a href={`https://www.google.com/search?q=${encodeURIComponent((info?.name||plantRecord.plant_key)+' vedlikehold stell Norge')}`}
+                target="_blank" rel="noreferrer"
+                style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:9,border:'1px solid #e7e5e4',fontSize:12,fontWeight:500,color:'#57534e',textDecoration:'none',background:'white',transition:'border-color .12s'}}
+                onMouseOver={e=>e.currentTarget.style.borderColor='#7a9f7a'}
+                onMouseOut={e=>e.currentTarget.style.borderColor='#e7e5e4'}>
+                ✂️ Vedlikeholdstips
               </a>
             </div>
           </div>
