@@ -1,4 +1,4 @@
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 const NAV = [
@@ -20,10 +20,12 @@ export default function Navbar() {
         @media (max-width: 768px) {
           .yardly-sidebar { display: none !important; }
           .yardly-mobile-nav { display: flex !important; }
-          .yardly-main { margin-left: 0 !important; padding-bottom: 72px !important; }
+          .yardly-mobile-topbar { display: flex !important; }
+          .yardly-main { margin-left: 0 !important; padding-bottom: 72px !important; padding-top: 56px !important; }
         }
         @media (min-width: 769px) {
           .yardly-mobile-nav { display: none !important; }
+          .yardly-mobile-topbar { display: none !important; }
         }
       `}</style>
 
@@ -66,6 +68,22 @@ export default function Navbar() {
           </button>
         </div>
       </nav>
+
+      {/* Mobile top bar */}
+      <div className="yardly-mobile-topbar" style={{
+        display:'none',
+        position:'fixed', top:0, left:0, right:0, zIndex:30,
+        background:'white', borderBottom:'1px solid #e7e5e4',
+        height:52, padding:'0 16px',
+        alignItems:'center', justifyContent:'space-between',
+        fontFamily:"'Inter',system-ui,sans-serif",
+      }}>
+        <Link to="/" style={{fontSize:16,fontWeight:600,color:'#375037',textDecoration:'none'}}>Yardly</Link>
+        <button onClick={signOut}
+          style={{background:'none',border:'none',color:'#a8a29e',fontSize:13,cursor:'pointer',padding:'6px 10px',fontFamily:'inherit'}}>
+          Logg ut
+        </button>
+      </div>
 
       {/* Mobile bottom nav */}
       <nav className="yardly-mobile-nav" style={{

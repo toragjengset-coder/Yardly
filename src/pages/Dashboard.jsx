@@ -47,6 +47,7 @@ export default function Dashboard() {
   const [modalTab, setModalTab] = useState('planter')
   const [collapsedCats, setCollapsedCats] = useState({})
   const [dashTab, setDashTab] = useState('hagen')
+  const [plantPhotoUrls, setPlantPhotoUrls] = useState({})
   const pendingPosRef = useRef(null)
   const drawSvgRef = useRef(null)
   const mapSvgRef = useRef(null)
@@ -66,6 +67,24 @@ export default function Dashboard() {
       const { data: p } = await supabase.from('garden_plants').select('*').eq('garden_id', g.id)
       setPlants(p || [])
       setView('app')
+      // Hent nyeste bilde per plante for visning på kartet
+      if (p && p.length > 0) {
+        const ids = p.map(pl => pl.id)
+        const { data: photos } = await supabase.from('plant_photos')
+          .select('garden_plant_id, storage_path')
+          .in('garden_plant_id', ids)
+          .order('taken_at', { ascending: false })
+        if (photos && photos.length > 0) {
+          const byPlant = {}
+          photos.forEach(ph => { if (!byPlant[ph.garden_plant_id]) byPlant[ph.garden_plant_id] = ph.storage_path })
+          const urlMap = {}
+          await Promise.all(Object.entries(byPlant).map(async ([plantId, path]) => {
+            const { data } = await supabase.storage.from('plant-photos').createSignedUrl(path, 3600)
+            if (data?.signedUrl) urlMap[plantId] = data.signedUrl
+          }))
+          setPlantPhotoUrls(urlMap)
+        }
+      }
     } else {
       setView('setup')
     }
@@ -421,10 +440,23 @@ export default function Dashboard() {
               const info = PLANT_MAP[p.plant_key]
               const cx = (p.position_x / 100) * 500
               const cy = (p.position_y / 100) * 320
+              const photoUrl = plantPhotoUrls[p.id]
               return (
                 <g key={p.id} style={{cursor:'pointer'}} onClick={e=>{e.stopPropagation();navigate(`/plant/${p.id}`)}}>
-                  <circle cx={cx} cy={cy} r="11" fill="white" fillOpacity="0.9" stroke="#7a9f7a" strokeWidth="1.2"/>
-                  <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize="13">{info?.emoji || '🌱'}</text>
+                  {photoUrl ? (
+                    <>
+                      <clipPath id={`clip-${p.id}`}>
+                        <circle cx={cx} cy={cy} r="14"/>
+                      </clipPath>
+                      <circle cx={cx} cy={cy} r="15" fill="white" stroke="#7a9f7a" strokeWidth="1.5"/>
+                      <image href={photoUrl} x={cx-14} y={cy-14} width="28" height="28" clipPath={`url(#clip-${p.id})`} preserveAspectRatio="xMidYMid slice"/>
+                    </>
+                  ) : (
+                    <>
+                      <circle cx={cx} cy={cy} r="13" fill="white" fillOpacity="0.9" stroke="#7a9f7a" strokeWidth="1.2"/>
+                      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize="13">{info?.emoji || '🌱'}</text>
+                    </>
+                  )}
                 </g>
               )
             })}
@@ -518,8 +550,8 @@ export default function Dashboard() {
 
       {/* Plant picker modal */}
       {showModal && (
-        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.3)',backdropFilter:'blur(3px)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:16}}>
-          <div style={{background:'white',borderRadius:20,width:'100%',maxWidth:420,maxHeight:'80vh',display:'flex',flexDirection:'column',boxShadow:'0 8px 40px rgba(0,0,0,.15)'}}>
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.3)',backdropFilter:'blur(3px)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:'0 0 60px 0'}}>
+          <div style={{background:'white',borderRadius:'20px 20px 0 0',width:'100%',maxWidth:480,maxHeight:'85vh',display:'flex',flexDirection:'column',boxShadow:'0 -4px 40px rgba(0,0,0,.15)'}}>
 
             {/* Header */}
             <div style={{padding:'18px 20px 0'}}>
