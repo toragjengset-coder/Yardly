@@ -566,19 +566,31 @@ export const MONTH_NAMES = [
 ]
 
 export const CITIES = [
-  { name:'Oslo',         info:'Sone 5 · Sørøst-Norge' },
-  { name:'Bergen',       info:'Sone 8 · Vestlandet' },
-  { name:'Trondheim',    info:'Sone 6 · Midt-Norge' },
-  { name:'Stavanger',    info:'Sone 8 · Rogaland' },
-  { name:'Tromsø',       info:'Sone 3 · Nord-Norge' },
-  { name:'Kristiansand', info:'Sone 8 · Sørlandet' },
-  { name:'Drammen',      info:'Sone 5 · Sørøst-Norge' },
-  { name:'Fredrikstad',  info:'Sone 5 · Østfold' },
-  { name:'Bodø',         info:'Sone 4 · Nord-Norge' },
-  { name:'Ålesund',      info:'Sone 7 · Vestlandet' },
-  { name:'Hamar',        info:'Sone 5 · Innlandet' },
-  { name:'Lillehammer',  info:'Sone 4 · Innlandet' },
+  { name:'Oslo',         info:'Sone 5 · Sørøst-Norge',  zone:5, lastFrost:'15. mai',   firstFrost:'20. sept', season:'mai–sept' },
+  { name:'Bergen',       info:'Sone 8 · Vestlandet',     zone:8, lastFrost:'15. april',  firstFrost:'15. okt',  season:'april–okt' },
+  { name:'Trondheim',    info:'Sone 6 · Midt-Norge',     zone:6, lastFrost:'20. mai',    firstFrost:'15. sept', season:'mai–sept' },
+  { name:'Stavanger',    info:'Sone 8 · Rogaland',       zone:8, lastFrost:'10. april',  firstFrost:'20. okt',  season:'april–okt' },
+  { name:'Tromsø',       info:'Sone 3 · Nord-Norge',     zone:3, lastFrost:'1. juni',    firstFrost:'1. sept',  season:'juni–aug' },
+  { name:'Kristiansand', info:'Sone 8 · Sørlandet',      zone:8, lastFrost:'15. april',  firstFrost:'15. okt',  season:'april–okt' },
+  { name:'Drammen',      info:'Sone 5 · Sørøst-Norge',   zone:5, lastFrost:'15. mai',    firstFrost:'20. sept', season:'mai–sept' },
+  { name:'Fredrikstad',  info:'Sone 5 · Østfold',        zone:5, lastFrost:'10. mai',    firstFrost:'25. sept', season:'mai–sept' },
+  { name:'Bodø',         info:'Sone 4 · Nord-Norge',     zone:4, lastFrost:'25. mai',    firstFrost:'10. sept', season:'juni–sept' },
+  { name:'Ålesund',      info:'Sone 7 · Vestlandet',     zone:7, lastFrost:'20. april',  firstFrost:'1. okt',   season:'april–okt' },
+  { name:'Hamar',        info:'Sone 5 · Innlandet',      zone:5, lastFrost:'15. mai',    firstFrost:'15. sept', season:'mai–sept' },
+  { name:'Lillehammer',  info:'Sone 4 · Innlandet',      zone:4, lastFrost:'25. mai',    firstFrost:'10. sept', season:'mai–sept' },
 ]
+
+// Detaljert info per hagretning
+export const DIR_DATA = {
+  N:  { hint:'Nordvendt — skygge mesteparten av dagen', sun:'Lite sol', goodFor:['Rips','Solbær','Hostas','Syrin','Rhododendron'], avoid:['Tomat','Agurk','Paprika','Roser'] },
+  NE: { hint:'Nordøstvendt — morgen-sol frem til middag', sun:'Morgen-sol', goodFor:['Bringebær','Salat','Spinat','Persille'], avoid:['Tomat','Paprika','Mais'] },
+  E:  { hint:'Østvendt — god morgensol til ca. kl. 13', sun:'Morgen-sol', goodFor:['Urter','Salat','Jordbær','Stauder'], avoid:['Tomat','Mais','Agurk'] },
+  SE: { hint:'Sørøstvendt — sol fra morgen til ettermiddag', sun:'Mye sol', goodFor:['Tomat','Agurk','Paprika','Jordbær','Urter'], avoid:[] },
+  S:  { hint:'Sørvendt — sol hele dagen', sun:'Full sol', goodFor:['Tomat','Agurk','Paprika','Mais','Gresskar','Vindrue'], avoid:['Hostas','Rips (trives bedre i halvskygge)'] },
+  SW: { hint:'Sørvestvendt — sol fra middag til kveld', sun:'Ettermiddag-sol', goodFor:['Roser','Bærbusker','Stauder','Erter'], avoid:['Salat (kan bolte i kveldssol)'] },
+  W:  { hint:'Vestvendt — ettermiddagssol', sun:'Ettermiddag-sol', goodFor:['Roser','Bærbusker','Peon','Blomster'], avoid:['Tomat','Paprika'] },
+  NW: { hint:'Nordvestvendt — begrenset sol', sun:'Lite sol', goodFor:['Rips','Solbær','Hardføre stauder','Syrin'], avoid:['Tomat','Agurk','Paprika','Roser'] },
+}
 
 export const DIR_HINTS = {
   N:  'Nordvendt — fokuser på skyggetolerante vekster som rips og syriner',
@@ -592,15 +604,14 @@ export const DIR_HINTS = {
 }
 
 export const LOG_ACTIVITIES = [
-  { type:'vanning',      label:'Vanning',       emoji:'💧' },
-  { type:'gjødsling',    label:'Gjødsling',      emoji:'🌱' },
-  { type:'plantenæring', label:'Plantenæring',   emoji:'🧪' },
-  { type:'beskjæring',   label:'Beskjæring',     emoji:'✂️' },
-  { type:'sprøyting',    label:'Sprøyting',      emoji:'🚿' },
-  { type:'repotting',    label:'Repotting',      emoji:'🪴' },
-  { type:'høsting',      label:'Høsting',        emoji:'🧺' },
-  { type:'luking',       label:'Luking/ugras',   emoji:'🌾' },
-  { type:'stell',        label:'Generelt stell', emoji:'🌿' },
+  { type:'vanning',    label:'Vanning',       emoji:'💧' },
+  { type:'gjødsling',  label:'Gjødsling',     emoji:'🌱' },
+  { type:'beskjæring', label:'Beskjæring',    emoji:'✂️' },
+  { type:'sprøyting',  label:'Sprøyting',     emoji:'🚿' },
+  { type:'repotting',  label:'Repotting',     emoji:'🪴' },
+  { type:'høsting',    label:'Innhøsting',    emoji:'🧺' },
+  { type:'luking',     label:'Luking/ugras',  emoji:'🌾' },
+  { type:'stell',      label:'Generelt stell',emoji:'🌿' },
 ]
 
 // ────────────────────────────────────────────────

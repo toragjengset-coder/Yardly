@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { PLANT_MAP, CAT_ORDER, CAT_LABELS, CITIES, DIR_HINTS } from '../lib/plantData'
+import { PLANT_MAP, CAT_ORDER, CAT_LABELS, CITIES, DIR_HINTS, DIR_DATA } from '../lib/plantData'
 
 const C = {
   garden:      { fill:'#c8e6c0', stroke:'#446444' },
@@ -219,15 +219,15 @@ export default function Dashboard() {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       {/* Progress */}
       <div style={{padding:'22px 32px',background:'white',borderBottom:'1px solid #e7e5e4',display:'flex',alignItems:'center',gap:8}}>
-        {[1,2,3,4].map((n,i) => (
+        {[1,2,3].map((n,i) => (
           <span key={n} style={{display:'flex',alignItems:'center',gap:8}}>
             <span style={{width:26,height:26,borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,fontWeight:600,background:setupStep>n?'#446444':setupStep===n?'#375037':'#e7e5e4',color:setupStep>=n?'white':'#78716c'}}>
               {setupStep > n ? '✓' : n}
             </span>
             <span style={{fontSize:12,color:setupStep===n?'#375037':'#a8a29e',fontWeight:setupStep===n?500:400}}>
-              {['Tegn hagen','Størrelse','By','Retning'][i]}
+              {['Tegn hagen','By','Retning'][i]}
             </span>
-            {i < 3 && <span style={{flex:1,height:1,background:setupStep>n?'#7a9f7a':'#e7e5e4',width:24}} />}
+            {i < 2 && <span style={{flex:1,height:1,background:setupStep>n?'#7a9f7a':'#e7e5e4',width:24}} />}
           </span>
         ))}
       </div>
@@ -314,34 +314,8 @@ export default function Dashboard() {
             </SetupCard>
           )}
 
-          {/* Step 2: Size */}
+          {/* Step 2: City */}
           {setupStep === 2 && (
-            <SetupCard title="Omtrent hvor stor er hagen?" sub="Brukes til å beregne planteavstander og plass.">
-              <div style={{background:'linear-gradient(135deg,#e8f5e2,#d4edcc)',borderRadius:12,padding:16,display:'flex',alignItems:'center',justifyContent:'center',minHeight:110,marginBottom:20}}>
-                <div style={{background:'rgba(55,80,55,.15)',border:'2px solid #446444',borderRadius:6,display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s',
-                  width: Math.min(200, Math.max(60, width * 12)),
-                  height: Math.min(120, Math.max(40, depth * 12)) }}>
-                  <span style={{fontSize:12,fontWeight:500,color:'#375037'}}>{width} × {depth} m</span>
-                </div>
-              </div>
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:20}}>
-                <div>
-                  <label style={{fontSize:11,fontWeight:500,color:'#78716c',textTransform:'uppercase',letterSpacing:'.05em',display:'block',marginBottom:6}}>Bredde (m)</label>
-                  <input type="number" value={width} min="1" max="300" onChange={e=>setWidth(+e.target.value)}
-                    style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}}/>
-                </div>
-                <div>
-                  <label style={{fontSize:11,fontWeight:500,color:'#78716c',textTransform:'uppercase',letterSpacing:'.05em',display:'block',marginBottom:6}}>Dybde (m)</label>
-                  <input type="number" value={depth} min="1" max="300" onChange={e=>setDepth(+e.target.value)}
-                    style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}}/>
-                </div>
-              </div>
-              <SetupNav onBack={()=>setSetupStep(1)} onNext={()=>setSetupStep(3)}/>
-            </SetupCard>
-          )}
-
-          {/* Step 3: City */}
-          {setupStep === 3 && (
             <SetupCard title="Hvor ligger hagen?" sub="Vi tilpasser sesongkalender og planteråd til din by.">
               <input className="input" placeholder="Søk etter by…" value={citySearch}
                 onChange={e=>setCitySearch(e.target.value)}
@@ -355,12 +329,12 @@ export default function Dashboard() {
                 ))}
               </div>
               {city && <div style={{background:'#f4f7f4',border:'1px solid #cddccd',borderRadius:12,padding:'12px 16px',marginBottom:16,fontSize:13,color:'#375037'}}>📍 {city} valgt</div>}
-              <SetupNav onBack={()=>setSetupStep(2)} onNext={()=>setSetupStep(4)}/>
+              <SetupNav onBack={()=>setSetupStep(1)} onNext={()=>setSetupStep(3)}/>
             </SetupCard>
           )}
 
-          {/* Step 4: Direction */}
-          {setupStep === 4 && (
+          {/* Step 3: Direction */}
+          {setupStep === 3 && (
             <SetupCard title="Hvilken retning vender hagen?" sub="Tenk på hvilken vei du ser når du ser utover hagen fra huset.">
               <div style={{display:'flex',justifyContent:'center',marginBottom:22}}>
                 <div style={{position:'relative',width:140,height:140}}>
@@ -384,7 +358,7 @@ export default function Dashboard() {
                 {direction === 'N' ? '🌥️' : direction === 'S' || direction === 'SE' || direction === 'SW' ? '☀️' : '⛅'} {DIR_HINTS[direction]}
               </div>
               <div style={{display:'flex',justifyContent:'space-between'}}>
-                <button onClick={()=>setSetupStep(3)} style={{background:'none',border:'none',color:'#78716c',padding:'8px 14px',borderRadius:8,fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>← Tilbake</button>
+                <button onClick={()=>setSetupStep(2)} style={{background:'none',border:'none',color:'#78716c',padding:'8px 14px',borderRadius:8,fontSize:13,cursor:'pointer',fontFamily:'inherit'}}>← Tilbake</button>
                 <button onClick={finishSetup} style={{padding:'10px 20px',borderRadius:10,fontSize:13,fontWeight:500,border:'none',background:'#375037',color:'white',cursor:'pointer',fontFamily:'inherit'}}>Kom i gang →</button>
               </div>
             </SetupCard>
@@ -419,6 +393,49 @@ export default function Dashboard() {
           }}>{label}</button>
         ))}
       </div>
+
+      {/* Hageinfo-kort */}
+      {dashTab === 'hagen' && (() => {
+        const cityData = CITIES.find(c => c.name === garden?.city)
+        const dirData = DIR_DATA[garden?.direction] || DIR_DATA['S']
+        if (!cityData) return null
+        return (
+          <div style={{background:'white',borderRadius:16,border:'1px solid #e7e5e4',padding:18,marginBottom:16}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
+              <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 14px'}}>
+                <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'.04em'}}>🌡️ Grosone {cityData.zone} · {garden?.city}</div>
+                <div style={{fontSize:13,color:'#375037',fontWeight:500,marginBottom:2}}>Siste frost: {cityData.lastFrost}</div>
+                <div style={{fontSize:13,color:'#375037',fontWeight:500,marginBottom:2}}>Første høstfrost: {cityData.firstFrost}</div>
+                <div style={{fontSize:12,color:'#78716c',marginTop:4}}>Dyrkingssesong: {cityData.season}</div>
+              </div>
+              <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 14px'}}>
+                <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'.04em'}}>🧭 {garden?.direction}-vendt · {dirData.sun}</div>
+                <div style={{fontSize:12,color:'#375037',marginBottom:6,lineHeight:1.5}}>{dirData.hint}</div>
+              </div>
+            </div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+              <div>
+                <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6}}>✅ Passer godt:</div>
+                <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                  {dirData.goodFor.slice(0,4).map(p => (
+                    <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#e8f5e2',color:'#375037'}}>{p}</span>
+                  ))}
+                </div>
+              </div>
+              {dirData.avoid.length > 0 && (
+                <div>
+                  <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6}}>⚠️ Vær obs på:</div>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                    {dirData.avoid.slice(0,3).map(p => (
+                      <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#fef3c7',color:'#92400e'}}>{p}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Map card */}
       {dashTab === 'hagen' && <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>

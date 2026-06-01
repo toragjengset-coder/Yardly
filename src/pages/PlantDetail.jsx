@@ -325,17 +325,9 @@ export default function PlantDetail() {
 
             {/* Totalsum */}
             {harvests.length > 0 && (
-              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
-                <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 16px'}}>
-                  <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Totalt innhøstet</div>
-                  <div style={{fontSize:18,fontWeight:500,color:'#375037'}}>{harvests.reduce((s,h)=>s+h.kg,0).toFixed(1)} kg</div>
-                </div>
-                <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 16px'}}>
-                  <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Estimert verdi</div>
-                  <div style={{fontSize:18,fontWeight:500,color:'#375037'}}>
-                    {harvests.some(h=>h.estimated_value_nok) ? harvests.reduce((s,h)=>s+(h.estimated_value_nok||0),0) + ' kr' : '—'}
-                  </div>
-                </div>
+              <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 16px',marginBottom:16}}>
+                <div style={{fontSize:11,color:'#78716c',marginBottom:4}}>Totalt innhøstet</div>
+                <div style={{fontSize:18,fontWeight:500,color:'#375037'}}>{harvests.reduce((s,h)=>s+(parseFloat(h.kg)||0),0).toFixed(1)} kg</div>
               </div>
             )}
 
@@ -381,7 +373,6 @@ export default function PlantDetail() {
                   <div style={{fontSize:13,fontWeight:500,color:'#44403c'}}>{h.kg} kg</div>
                   <div style={{fontSize:11,color:'#a8a29e'}}>
                     {new Date(h.harvested_at).toLocaleDateString('no-NO',{day:'numeric',month:'short',year:'numeric'})}
-                    {h.estimated_value_nok ? ` · ${h.estimated_value_nok} kr` : ''}
                   </div>
                   {h.notes && <div style={{fontSize:12,color:'#78716c',marginTop:3}}>{h.notes}</div>}
                 </div>
