@@ -40,7 +40,9 @@ export default function HarvestOverview() {
 
   const plantName = (gardenPlantId) => {
     const gp = plants.find(p => p.id === gardenPlantId)
-    return gp ? (PLANT_MAP[gp.plant_key]?.name || gp.plant_key) : '–'
+    if (!gp) return '–'
+    const info = PLANT_MAP[gp.plant_key]
+    return info?.harvestLabel || info?.name || gp.plant_key
   }
   const plantEmoji = (gardenPlantId) => {
     const gp = plants.find(p => p.id === gardenPlantId)

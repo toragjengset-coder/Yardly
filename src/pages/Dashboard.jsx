@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
-import { PLANT_MAP, CAT_ORDER, CAT_LABELS, CITIES, DIR_HINTS, DIR_DATA } from '../lib/plantData'
+import { PLANT_MAP, CAT_ORDER, CAT_LABELS, CITIES, DIR_HINTS, DIR_DATA, DIR_FULL } from '../lib/plantData'
 
 const C = {
   garden:      { fill:'#c8e6c0', stroke:'#446444' },
@@ -394,48 +394,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Hageinfo-kort */}
-      {dashTab === 'hagen' && (() => {
-        const cityData = CITIES.find(c => c.name === garden?.city)
-        const dirData = DIR_DATA[garden?.direction] || DIR_DATA['S']
-        if (!cityData) return null
-        return (
-          <div style={{background:'white',borderRadius:16,border:'1px solid #e7e5e4',padding:18,marginBottom:16}}>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,marginBottom:14}}>
-              <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 14px'}}>
-                <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'.04em'}}>🌡️ Grosone {cityData.zone} · {garden?.city}</div>
-                <div style={{fontSize:13,color:'#375037',fontWeight:500,marginBottom:2}}>Siste frost: {cityData.lastFrost}</div>
-                <div style={{fontSize:13,color:'#375037',fontWeight:500,marginBottom:2}}>Første høstfrost: {cityData.firstFrost}</div>
-                <div style={{fontSize:12,color:'#78716c',marginTop:4}}>Dyrkingssesong: {cityData.season}</div>
-              </div>
-              <div style={{background:'#f4f7f4',borderRadius:12,padding:'12px 14px'}}>
-                <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6,textTransform:'uppercase',letterSpacing:'.04em'}}>🧭 {garden?.direction}-vendt · {dirData.sun}</div>
-                <div style={{fontSize:12,color:'#375037',marginBottom:6,lineHeight:1.5}}>{dirData.hint}</div>
-              </div>
-            </div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
-              <div>
-                <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6}}>✅ Passer godt:</div>
-                <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
-                  {dirData.goodFor.slice(0,4).map(p => (
-                    <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#e8f5e2',color:'#375037'}}>{p}</span>
-                  ))}
-                </div>
-              </div>
-              {dirData.avoid.length > 0 && (
-                <div>
-                  <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:6}}>⚠️ Vær obs på:</div>
-                  <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
-                    {dirData.avoid.slice(0,3).map(p => (
-                      <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#fef3c7',color:'#92400e'}}>{p}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )
-      })()}
+      {/* Hageinfo-kort vises ETTER kartet — se lenger ned */}
 
       {/* Map card */}
       {dashTab === 'hagen' && <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
@@ -443,7 +402,7 @@ export default function Dashboard() {
           <span style={{fontSize:12,color:'#78716c'}}>
             🌱 Klikk i hagen for å legge til plante
           </span>
-          <div style={{marginLeft:'auto',background:'#f5f5f4',borderRadius:8,padding:'5px 10px',fontSize:12,fontWeight:500,color:'#57534e'}}>🧭 {garden?.direction || 'S'}</div>
+          <div style={{marginLeft:'auto',background:'#f5f5f4',borderRadius:8,padding:'5px 10px',fontSize:12,fontWeight:500,color:'#57534e'}}>🧭 {DIR_FULL[garden?.direction] || 'Sør'}vendt</div>
         </div>
         <div style={{position:'relative',width:'100%',background:'#f6faf5'}}>
           <svg ref={mapSvgRef} viewBox="0 0 500 320" xmlns="http://www.w3.org/2000/svg"
@@ -488,6 +447,65 @@ export default function Dashboard() {
           ))}
         </div>
       </div>}
+
+      {/* Hageinfo-kort — under kartet */}
+      {dashTab === 'hagen' && (() => {
+        const cityData = CITIES.find(c => c.name === garden?.city)
+        const dir = garden?.direction || 'S'
+        const dirData = DIR_DATA[dir] || DIR_DATA['S']
+        const dirFull = DIR_FULL[dir] || dir
+        if (!cityData) return null
+        return (
+          <div style={{background:'white',borderRadius:16,border:'1px solid #e7e5e4',padding:20,marginBottom:20}}>
+            {/* Grosone */}
+            <div style={{marginBottom:16}}>
+              <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:6}}>
+                🌡️ Grosone {cityData.zone} — {garden?.city}
+              </div>
+              <div style={{fontSize:13,color:'#57534e',lineHeight:1.6,marginBottom:6}}>
+                I grosone {cityData.zone} kan du trygt plante busker, trær og stauder merket <strong>H1–H{cityData.maxH}</strong>.
+                {cityData.maxH < 8 && ` Vær forsiktig med arter beregnet for H${cityData.maxH + 1}–H8 — disse kan fryse i hjel i kalde vintrer.`}
+              </div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:10,marginBottom:8}}>
+                <span style={{fontSize:12,color:'#78716c'}}>📅 Siste frost: <strong>{cityData.lastFrost}</strong></span>
+                <span style={{fontSize:12,color:'#78716c'}}>🍂 Første høstfrost: <strong>{cityData.firstFrost}</strong></span>
+                <span style={{fontSize:12,color:'#78716c'}}>🌱 Sesong: <strong>{cityData.season}</strong></span>
+              </div>
+              <a href="https://www.hageselskapet.no/planteskolen/hardforhetsoner" target="_blank" rel="noreferrer"
+                style={{fontSize:12,color:'#446444',textDecoration:'underline'}}>
+                Se oversikt over hardførhetsoner →
+              </a>
+            </div>
+            {/* Retning */}
+            <div style={{borderTop:'1px solid #f5f0eb',paddingTop:14}}>
+              <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:6}}>
+                🧭 {dirFull}vendt — {dirData.sun}
+              </div>
+              <div style={{fontSize:13,color:'#57534e',lineHeight:1.6,marginBottom:10}}>{dirData.hint}</div>
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                <div>
+                  <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:5}}>Passer godt:</div>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                    {dirData.goodFor.slice(0,4).map(p => (
+                      <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#e8f5e2',color:'#375037'}}>{p}</span>
+                    ))}
+                  </div>
+                </div>
+                {dirData.avoid.length > 0 && (
+                  <div>
+                    <div style={{fontSize:11,color:'#78716c',fontWeight:500,marginBottom:5}}>Vær obs på:</div>
+                    <div style={{display:'flex',flexWrap:'wrap',gap:4}}>
+                      {dirData.avoid.slice(0,3).map(p => (
+                        <span key={p} style={{fontSize:11,padding:'3px 8px',borderRadius:20,background:'#fef3c7',color:'#92400e'}}>{p}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Plant list */}
       {dashTab === 'planter' && <div style={{background:'white',borderRadius:16,border:'2px solid #f5f5f4',boxShadow:'0 1px 3px rgba(0,0,0,.04)',overflow:'hidden',marginBottom:22}}>
