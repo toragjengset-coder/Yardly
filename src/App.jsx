@@ -1,5 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+
+// Redirect LinkedIn in-app browser on iOS to Safari
+const ua = window.navigator.userAgent
+if (ua.includes('Mobile') && (ua.includes('iPhone') || ua.includes('iPad')) && ua.includes('LinkedInApp')) {
+  window.location.href = 'x-safari-' + window.location.href
+}
 import Navbar from './components/Navbar'
 import Landing from './pages/Landing'
 import Dashboard from './pages/Dashboard'
