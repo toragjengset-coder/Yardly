@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
@@ -18,6 +18,8 @@ export default function PlantDetail() {
   const [comment, setComment] = useState('')
   const [photos, setPhotos] = useState([])
   const [uploading, setUploading] = useState(false)
+  const [lightbox, setLightbox] = useState(null) // { index, urls }
+  const photoUrls = useRef({})
   const [photoNote, setPhotoNote] = useState('')
   const [pendingFile, setPendingFile] = useState(null)
   const [harvests, setHarvests] = useState([])
@@ -320,10 +322,26 @@ export default function PlantDetail() {
               <div style={{textAlign:'center',padding:'20px 0',color:'#a8a29e',fontSize:13}}>Ingen bilder ennå — last opp det første!</div>
             ) : (
               <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
-                {photos.map(ph => (
-                  <PhotoCard key={ph.id} photo={ph} supabase={supabase} onDelete={deletePhoto}/>
+                {photos.map((ph, i) => (
+                  <PhotoCard key={ph.id} photo={ph} supabase={supabase} onDelete={deletePhoto}
+                    onClick={(url) => {
+                      photoUrls.current[ph.id] = url
+                      const mapped = photos.map(p => ({ ...p, url: photoUrls.current[p.id] || null }))
+                      setLightbox({ index: i, photos: mapped })
+                    }}
+                  />
                 ))}
               </div>
+            )}
+
+            {/* Lightbox */}
+            {lightbox && (
+              <Lightbox
+                photos={lightbox.photos}
+                startIndex={lightbox.index}
+                onClose={() => setLightbox(null)}
+                onDelete={(ph) => { deletePhoto(ph); setLightbox(null) }}
+              />
             )}
           </div>
         </div>
@@ -406,14 +424,78 @@ export default function PlantDetail() {
   )
 }
 
-function PhotoCard({ photo, supabase, onDelete }) {
+function Lightbox({ photos, startIndex, onClose, onDelete }) {
+  const [idx, setIdx] = useState(startIndex)
+  const touchStart = { current: null }
+
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight') setIdx(i => Math.min(i + 1, photos.length - 1))
+      if (e.key === 'ArrowLeft')  setIdx(i => Math.max(i - 1, 0))
+      if (e.key === 'Escape') onClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [photos.length, onClose])
+
+  const photo = photos[idx]
+
+  return (
+    <div
+      onClick={onClose}
+      style={{position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}
+      onTouchStart={e => { touchStart.current = e.touches[0].clientX }}
+      onTouchEnd={e => {
+        if (touchStart.current === null) return
+        const diff = touchStart.current - e.changedTouches[0].clientX
+        if (diff > 50) setIdx(i => Math.min(i + 1, photos.length - 1))
+        if (diff < -50) setIdx(i => Math.max(i - 1, 0))
+        touchStart.current = null
+      }}
+    >
+      {/* Lukk */}
+      <button onClick={onClose} style={{position:'absolute',top:16,right:16,background:'none',border:'none',color:'white',fontSize:28,cursor:'pointer',lineHeight:1,zIndex:10}}>×</button>
+
+      {/* Pil venstre */}
+      {idx > 0 && (
+        <button onClick={e => { e.stopPropagation(); setIdx(i => i - 1) }}
+          style={{position:'absolute',left:12,background:'rgba(255,255,255,.15)',border:'none',color:'white',fontSize:24,borderRadius:'50%',width:44,height:44,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          ‹
+        </button>
+      )}
+
+      {/* Bilde */}
+      <div onClick={e => e.stopPropagation()} style={{maxWidth:'90vw',maxHeight:'85vh',display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+        <img src={photo.url} alt="" style={{maxWidth:'90vw',maxHeight:'75vh',objectFit:'contain',borderRadius:8}}/>
+        {photo.note && <div style={{color:'rgba(255,255,255,.8)',fontSize:13,textAlign:'center'}}>{photo.note}</div>}
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <span style={{color:'rgba(255,255,255,.5)',fontSize:12}}>{idx + 1} / {photos.length}</span>
+          <button onClick={() => { onDelete(photo); if (idx >= photos.length - 1) setIdx(Math.max(0, idx - 1)) }}
+            style={{background:'rgba(239,68,68,.7)',border:'none',color:'white',borderRadius:6,padding:'4px 10px',fontSize:12,cursor:'pointer'}}>
+            Slett
+          </button>
+        </div>
+      </div>
+
+      {/* Pil høyre */}
+      {idx < photos.length - 1 && (
+        <button onClick={e => { e.stopPropagation(); setIdx(i => i + 1) }}
+          style={{position:'absolute',right:12,background:'rgba(255,255,255,.15)',border:'none',color:'white',fontSize:24,borderRadius:'50%',width:44,height:44,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          ›
+        </button>
+      )}
+    </div>
+  )
+}
+
+function PhotoCard({ photo, supabase, onDelete, onClick }) {
   const [url, setUrl] = useState(null)
   useEffect(() => {
     supabase.storage.from('plant-photos').createSignedUrl(photo.storage_path, 3600)
       .then(({ data }) => { if (data?.signedUrl) setUrl(data.signedUrl) })
   }, [photo.storage_path])
   return (
-    <div style={{borderRadius:10,overflow:'hidden',background:'#f5f5f4',aspectRatio:'1',position:'relative'}}>
+    <div onClick={() => url && onClick(url)} style={{borderRadius:10,overflow:'hidden',background:'#f5f5f4',aspectRatio:'1',position:'relative',cursor: url ? 'pointer' : 'default'}}>
       {url
         ? <img src={url} alt="" style={{width:'100%',height:'100%',objectFit:'cover'}}/>
         : <div style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20}}>⏳</div>
@@ -423,7 +505,7 @@ function PhotoCard({ photo, supabase, onDelete }) {
           {photo.note}
         </div>
       )}
-      <button onClick={()=>onDelete(photo)}
+      <button onClick={e => { e.stopPropagation(); onDelete(photo) }}
         style={{position:'absolute',top:4,right:4,width:22,height:22,borderRadius:'50%',border:'none',background:'rgba(0,0,0,.5)',color:'white',fontSize:13,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',lineHeight:1}}>
         ×
       </button>
