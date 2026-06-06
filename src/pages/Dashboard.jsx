@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [view, setView] = useState('app') // app | setup
   const [setupStep, setSetupStep] = useState(1)
   const [showModal, setShowModal] = useState(false)
+  const [infoOpen, setInfoOpen] = useState(false)
   const [pendingPos, setPendingPos] = useState(null)
   const [plantSearch, setPlantSearch] = useState('')
   // setup state
@@ -456,29 +457,37 @@ export default function Dashboard() {
         const dirFull = DIR_FULL[dir] || dir
         if (!cityData) return null
         return (
-          <div style={{background:'white',borderRadius:16,border:'1px solid #e7e5e4',padding:20,marginBottom:20}}>
-            {/* Grosone */}
-            <div style={{marginBottom:16}}>
-              <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:6}}>
-                🌡️ Grosone {cityData.zone} — {garden?.city}
+          <div style={{background:'white',borderRadius:16,border:'1px solid #e7e5e4',marginBottom:20,overflow:'hidden'}}>
+            {/* Header — alltid synlig */}
+            <button onClick={() => setInfoOpen(o => !o)}
+              style={{width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',background:'none',border:'none',cursor:'pointer',fontFamily:'inherit'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <span style={{fontSize:13}}>🌡️</span>
+                <span style={{fontSize:13,fontWeight:500,color:'#292524'}}>Grosone {cityData.zone} · {garden?.city} · {dirFull}vendt</span>
               </div>
-              <div style={{fontSize:13,color:'#57534e',lineHeight:1.6,marginBottom:6}}>
-                I grosone {cityData.zone} kan du trygt plante busker, trær og stauder merket <strong>H1–H{cityData.maxH}</strong>.
-                {cityData.maxH < 8 && ` Vær forsiktig med arter beregnet for H${cityData.maxH + 1}–H8 — disse kan fryse i hjel i kalde vintrer.`}
+              <span style={{fontSize:12,color:'#a8a29e',transition:'transform .2s',display:'inline-block',transform:infoOpen?'rotate(180deg)':'rotate(0deg)'}}>▼</span>
+            </button>
+            {/* Innhold */}
+            {infoOpen && (
+              <div style={{padding:'0 20px 18px',borderTop:'1px solid #f5f0eb'}}>
+                <div style={{marginTop:14,marginBottom:14}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:6}}>🌡️ Grosone {cityData.zone}</div>
+                  <div style={{fontSize:13,color:'#57534e',lineHeight:1.6,marginBottom:8}}>
+                    I grosone {cityData.zone} kan du trygt plante busker, trær og stauder merket <strong>H1–H{cityData.maxH}</strong>.
+                    {cityData.maxH < 8 && ` Vær forsiktig med arter beregnet for H${cityData.maxH + 1}–H8 — disse kan fryse i hjel i kalde vintrer.`}
+                  </div>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:10}}>
+                    <span style={{fontSize:12,color:'#78716c'}}>📅 Siste frost: <strong>{cityData.lastFrost}</strong></span>
+                    <span style={{fontSize:12,color:'#78716c'}}>🍂 Første høstfrost: <strong>{cityData.firstFrost}</strong></span>
+                    <span style={{fontSize:12,color:'#78716c'}}>🌱 Sesong: <strong>{cityData.season}</strong></span>
+                  </div>
+                </div>
+                <div style={{borderTop:'1px solid #f5f0eb',paddingTop:14}}>
+                  <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:6}}>🧭 {dirFull}vendt — {dirData.sun}</div>
+                  <div style={{fontSize:13,color:'#57534e',lineHeight:1.6}}>{dirData.hint}</div>
+                </div>
               </div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:10,marginBottom:8}}>
-                <span style={{fontSize:12,color:'#78716c'}}>📅 Siste frost: <strong>{cityData.lastFrost}</strong></span>
-                <span style={{fontSize:12,color:'#78716c'}}>🍂 Første høstfrost: <strong>{cityData.firstFrost}</strong></span>
-                <span style={{fontSize:12,color:'#78716c'}}>🌱 Sesong: <strong>{cityData.season}</strong></span>
-              </div>
-            </div>
-            {/* Retning */}
-            <div style={{borderTop:'1px solid #f5f0eb',paddingTop:14}}>
-              <div style={{fontSize:13,fontWeight:600,color:'#292524',marginBottom:6}}>
-                🧭 {dirFull}vendt — {dirData.sun}
-              </div>
-              <div style={{fontSize:13,color:'#57534e',lineHeight:1.6}}>{dirData.hint}</div>
-            </div>
+            )}
           </div>
         )
       })()}
@@ -588,7 +597,7 @@ export default function Dashboard() {
               <>
                 <div style={{padding:'0 20px 12px',borderBottom:'1px solid #f5f5f4'}}>
                   <input placeholder="Søk…" value={plantSearch} onChange={e=>setPlantSearch(e.target.value)}
-                    style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1px solid #e7e5e4',fontSize:13,fontFamily:'inherit',outline:'none'}} autoFocus/>
+                    style={{width:'100%',padding:'10px 14px',borderRadius:10,border:'1px solid #e7e5e4',fontSize:16,fontFamily:'inherit',outline:'none'}} autoFocus/>
                   {addError && <div style={{fontSize:12,color:'#dc2626',marginTop:8,padding:'6px 10px',background:'#fee2e2',borderRadius:8}}>{addError}</div>}
                 </div>
                 <div style={{overflowY:'auto',padding:12,flex:1}}>
